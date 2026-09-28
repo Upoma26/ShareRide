@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ShareRide project
+venv/
+.env
+instance/
+*.sqlite3
+db.sqlite3
+static/uploads/*
+!static/uploads/.gitkeep
