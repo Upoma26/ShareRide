@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Register · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1 class="auth-title">Create your account</h1>
+  <p class="auth-sub">Join ShareRide to find or offer safe, affordable rides.</p>
+
+  <form method="POST" action="" enctype="multipart/form-data" id="registerForm" novalidate>
+
+    <div class="form-group">
+      <label for="full_name">Full name</label>
+      <input type="text" id="full_name" name="full_name"
+             placeholder="e.g. Rahim Uddin" required minlength="3" maxlength="100">
+      <small class="error-msg">Please enter your full name (at least 3 letters).</small>
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Phone number</label>
+      <input type="tel" id="phone" name="phone"
+             placeholder="01XXXXXXXXX" required pattern="01[3-9][0-9]{8}">
+      <small class="hint">An OTP will be sent to this number.</small>
+      <small class="error-msg">Enter a valid 11-digit Bangladeshi number (e.g. 01712345678).</small>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email"
+             placeholder="you@example.com" required>
+      <small class="error-msg">Please enter a valid email address.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="nid_number">NID number</label>
+      <input type="text" id="nid_number" name="nid_number"
+             placeholder="10, 13 or 17 digits" required pattern="[0-9]{10}|[0-9]{13}|[0-9]{17}">
+      <small class="error-msg">NID must be 10, 13 or 17 digits.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="nid_front">NID photo (front side)</label>
+      <input type="file" id="nid_front" name="nid_front"
+             accept=".jpg,.jpeg,.png,.pdf" required>
+      <small class="error-msg">Please upload the front side of your NID.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="nid_back">NID photo (back side)</label>
+      <input type="file" id="nid_back" name="nid_back"
+             accept=".jpg,.jpeg,.png,.pdf" required>
+      <small class="hint">JPG, PNG or PDF. Only an admin can see these.</small>
+      <small class="error-msg">Please upload the back side of your NID.</small>
+    </div>
+
+    <div class="form-group">
+      <label>I want to</label>
+      <div class="role-choice">
+        <label class="role-option">
+          <input type="radio" name="role" value="seeker" checked>
+          <span>Find rides</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="provider">
+          <span>Offer rides</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="At least 8 characters" required minlength="8">
+      <small class="error-msg">Password must be at least 8 characters.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm_password">Confirm password</label>
+      <input type="password" id="confirm_password" name="confirm_password"
+             placeholder="Type the password again" required>
+      <small class="error-msg">Passwords do not match.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Create account</button>
+  </form>
+
+  <p class="auth-switch">
+    Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+  </p>
+</div>
+
+<script>
+  document.getElementById("registerForm").addEventListener("submit", function (e) {
+    var form = this;
+    var ok = true;
+    var pass = document.getElementById("password");
+    var confirm = document.getElementById("confirm_password");
+
+    confirm.setCustomValidity(pass.value === confirm.value ? "" : "mismatch");
+
+    form.querySelectorAll("input").forEach(function (input) {
+      var group = input.closest(".form-group");
+      if (!input.checkValidity()) {
+        group.classList.add("has-error");
+        ok = false;
+      } else {
+        group.classList.remove("has-error");
+      }
+    });
+
+    if (!ok) { e.preventDefault(); }
+  });
+</script>
+{% endblock %}

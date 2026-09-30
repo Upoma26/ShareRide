@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1 class="auth-title">Welcome back</h1>
+  <p class="auth-sub">Sign in with your phone number and password.</p>
+
+  <form method="POST" action="" id="loginForm" novalidate>
+
+    <div class="form-group">
+      <label for="phone">Phone number</label>
+      <input type="tel" id="phone" name="phone"
+             placeholder="01XXXXXXXXX" required pattern="01[3-9][0-9]{8}">
+      <small class="error-msg">Enter a valid 11-digit Bangladeshi number.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="Your password" required>
+      <small class="error-msg">Please enter your password.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+  </form>
+
+  <p class="auth-switch">
+    New to ShareRide? <a href="{{ url_for('auth.register') }}">Create an account</a>
+  </p>
+</div>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    var ok = true;
+    this.querySelectorAll("input").forEach(function (input) {
+      var group = input.closest(".form-group");
+      if (!input.checkValidity()) {
+        group.classList.add("has-error");
+        ok = false;
+      } else {
+        group.classList.remove("has-error");
+      }
+    });
+    if (!ok) { e.preventDefault(); }
+  });
+</script>
+{% endblock %}

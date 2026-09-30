@@ -15,7 +15,9 @@ def create_app():
 
     from routes.main import main_bp
     app.register_blueprint(main_bp)
-
+    from routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
+    
     @app.cli.command("init-db")
     def init_db():
         db.create_all()

@@ -189,3 +189,140 @@ td {
   h1 { font-size: 22px; }
   .navbar .wrap { flex-wrap: wrap; }
 }
+
+/* ===== SR-5: Register & Login pages ===== */
+.auth-card {
+  max-width: 460px;
+  margin: 32px auto;
+  background: var(--surface, #FFFFFF);
+  border: 1px solid var(--border, #D4E1EB);
+  border-radius: 14px;
+  padding: 32px 28px;
+}
+
+.auth-title {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: var(--ink, #0F2434);
+}
+
+.auth-sub {
+  margin: 0 0 24px;
+  color: var(--muted, #51697C);
+  font-size: 14px;
+}
+
+.auth-card .form-group {
+  margin-bottom: 16px;
+}
+
+.auth-card .form-group > label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink, #0F2434);
+}
+
+.auth-card input[type="text"],
+.auth-card input[type="tel"],
+.auth-card input[type="email"],
+.auth-card input[type="password"],
+.auth-card input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  font-size: 15px;
+  background: #F7FAFC;
+  border: 1px solid #D4E1EB;
+  border-radius: 10px;
+  color: #0F2434;
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: #1C6EA4;
+  box-shadow: 0 0 0 3px #E4EFF7;
+}
+
+.auth-card .hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #51697C;
+}
+
+.auth-card .error-msg {
+  display: none;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #8E2323;
+}
+
+.auth-card .has-error input {
+  border-color: #8E2323;
+  background: #F7E8E5;
+}
+
+.auth-card .has-error .error-msg {
+  display: block;
+}
+
+.role-choice {
+  display: flex;
+  gap: 10px;
+}
+
+.role-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid #D4E1EB;
+  border-radius: 10px;
+  background: #F7FAFC;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.role-option:has(input:checked) {
+  border-color: #1C6EA4;
+  background: #E4EFF7;
+}
+
+.auth-card .btn {
+  display: inline-block;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.auth-card .btn-primary {
+  background: #1C6EA4;
+  color: #FFFFFF;
+}
+
+.auth-card .btn-primary:hover {
+  background: #13537C;
+}
+
+.auth-card .btn-block {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 14px;
+  color: #51697C;
+}
+
+.auth-switch a {
+  color: #1C6EA4;
+  font-weight: 600;
+}
