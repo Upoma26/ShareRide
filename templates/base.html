@@ -13,8 +13,8 @@
       <a class="brand" href="{{ url_for('main.index') }}">ShareRide</a>
       <div class="navlinks">
         <a href="{{ url_for('main.index') }}">Home</a>
-        <a href="#">Sign in</a>
-        <a href="#">Register</a>
+       <a href="{{ url_for('auth.login') }}">Sign in</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
       </div>
     </div>
   </nav>
