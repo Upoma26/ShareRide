@@ -1,0 +1,191 @@
+:root {
+  --bg: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-2: #F7FAFC;
+  --line: #D4E1EB;
+  --ink: #0F2434;
+  --muted: #51697C;
+  --primary: #1C6EA4;
+  --primary-dark: #13537C;
+  --tint: #E4EFF7;
+  --tint-line: #C9DEEE;
+  --warn: #7A4A0C;
+  --warn-bg: #F7EADA;
+  --danger: #8E2323;
+  --danger-bg: #F7E8E5;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { margin: 0 0 10px; line-height: 1.3; }
+h1 { font-size: 26px; }
+h2 { font-size: 20px; }
+h3 { font-size: 16px; }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-dark); }
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ---------- navbar ---------- */
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+.navbar .wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.navlinks {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.navlinks a {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.navlinks a:hover { background: var(--tint); color: var(--primary-dark); }
+
+/* ---------- layout ---------- */
+.page { padding: 28px 0 60px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-block;
+  padding: 12px 20px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.btn:hover { background: var(--primary-dark); color: #FFFFFF; }
+.btn-ghost {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+.btn-danger { background: var(--danger); }
+.btn-full { display: block; width: 100%; }
+
+/* ---------- forms ---------- */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 15px;
+  font-family: inherit;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+/* ---------- pills ---------- */
+.pill {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pill-warn { background: var(--warn-bg); color: var(--warn); }
+.pill-danger { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- alerts ---------- */
+.alert {
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  background: var(--tint);
+  border: 1px solid var(--tint-line);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.alert-warn { background: var(--warn-bg); border-color: transparent; color: var(--warn); }
+.alert-danger { background: var(--danger-bg); border-color: transparent; color: var(--danger); }
+
+/* ---------- table ---------- */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th {
+  text-align: left;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 0 10px 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+td {
+  padding: 12px 10px 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+/* ---------- footer ---------- */
+.footer {
+  background: var(--ink);
+  color: #AFC9DC;
+  padding: 26px 0;
+  font-size: 14px;
+}
+
+.muted { color: var(--muted); }
+.text-center { text-align: center; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 22px; }
+  .navbar .wrap { flex-wrap: wrap; }
+}

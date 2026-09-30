@@ -1,12 +1,28 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ShareRide</title>
-</head>
-<body>
-  <h1>ShareRide is running</h1>
-  <p>A Community Ride-Sharing Platform for Safe and Affordable Travel</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}ShareRide — Community Ride Sharing{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  <h1>Share the seat, split the cost, travel safer.</h1>
+  <p class="muted">
+    ShareRide connects verified commuters going the same way. Post your empty
+    seats or book one, with admin-verified identity, a Trip PIN at pickup and an
+    SOS button on every ride.
+  </p>
+  <p style="margin-top:18px">
+    <a class="btn" href="#">Create account</a>
+    <a class="btn btn-ghost" href="#">Sign in</a>
+  </p>
+</div>
+
+<div class="card">
+  <h2>What you get</h2>
+  <p><span class="pill">Verified identity</span> Every NID is reviewed manually by an admin.</p>
+  <p><span class="pill">Trip PIN</span> A trip cannot start without the passenger PIN.</p>
+  <p><span class="pill">SOS</span> An emergency button on every active ride.</p>
+  <p><span class="pill-warn pill">Time-bound chat</span> Chat closes 24 hours after the ride ends.</p>
+</div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ShareRide{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="wrap">
+      <a class="brand" href="{{ url_for('main.index') }}">ShareRide</a>
+      <div class="navlinks">
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <a href="#">Sign in</a>
+        <a href="#">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="wrap">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <strong style="color:#FFFFFF">ShareRide</strong>
+      <p style="margin:6px 0 0">A community ride-sharing platform for safe and affordable travel.</p>
+      <p style="margin:14px 0 0;opacity:.7;font-size:13px">
+        University of Asia Pacific &middot; CSE 314 Software Engineering Lab
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
