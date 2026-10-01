@@ -1,0 +1,20 @@
+{% macro form_field(name, label, type="text", placeholder="", required=True,
+                    pattern=None, minlength=None, accept=None,
+                    hint=None, error=None, value="") %}
+  <div class="form-group">
+    <label for="{{ name }}">{{ label }}</label>
+    <input type="{{ type }}" id="{{ name }}" name="{{ name }}"
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+           {% if value and type != "password" and type != "file" %}value="{{ value }}"{% endif %}
+           {% if required %}required{% endif %}
+           {% if pattern %}pattern="{{ pattern }}"{% endif %}
+           {% if minlength %}minlength="{{ minlength }}"{% endif %}
+           {% if accept %}accept="{{ accept }}"{% endif %}>
+    {% if hint %}
+      <small class="hint">{{ hint }}</small>
+    {% endif %}
+    {% if error %}
+      <small class="error-msg">{{ error }}</small>
+    {% endif %}
+  </div>
+{% endmacro %}

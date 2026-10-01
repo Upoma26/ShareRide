@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "partials/form_field.html" import form_field %}
+{% from "partials/button.html" import button %}
 
 {% block title %}Sign in · ShareRide{% endblock %}
 
@@ -9,21 +11,15 @@
 
   <form method="POST" action="" id="loginForm" novalidate>
 
-    <div class="form-group">
-      <label for="phone">Phone number</label>
-      <input type="tel" id="phone" name="phone"
-             placeholder="01XXXXXXXXX" required pattern="01[3-9][0-9]{8}">
-      <small class="error-msg">Enter a valid 11-digit Bangladeshi number.</small>
-    </div>
+    {{ form_field("phone", "Phone number", type="tel",
+                  placeholder="01XXXXXXXXX", pattern="01[3-9][0-9]{8}",
+                  error="Enter a valid 11-digit Bangladeshi number.") }}
 
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password"
-             placeholder="Your password" required>
-      <small class="error-msg">Please enter your password.</small>
-    </div>
+    {{ form_field("password", "Password", type="password",
+                  placeholder="Your password",
+                  error="Please enter your password.") }}
 
-    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    {{ button("Sign in", block=True) }}
   </form>
 
   <p class="auth-switch">
