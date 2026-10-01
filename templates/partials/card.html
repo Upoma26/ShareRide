@@ -1,0 +1,13 @@
+{% macro card(title=None, subtitle=None) %}
+  <div class="card">
+    {% if title %}
+      <h2 class="card-title">{{ title }}</h2>
+    {% endif %}
+    {% if subtitle %}
+      <p class="card-sub">{{ subtitle }}</p>
+    {% endif %}
+    <div class="card-body">
+      {{ caller() }}
+    </div>
+  </div>
+{% endmacro %}

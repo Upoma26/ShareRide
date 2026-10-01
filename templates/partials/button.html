@@ -1,0 +1,8 @@
+{% macro button(text, type="submit", style="primary", href=None, block=False) %}
+  {% set classes = "btn btn-" ~ style ~ (" btn-block" if block else "") %}
+  {% if href %}
+    <a href="{{ href }}" class="{{ classes }}">{{ text }}</a>
+  {% else %}
+    <button type="{{ type }}" class="{{ classes }}">{{ text }}</button>
+  {% endif %}
+{% endmacro %}
