@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "partials/card.html" import card %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Dashboard · ShareRide{% endblock %}
+
+{% block content %}
+  {% if admin_area %}
+    {% call card("Admin area", "Only admins can see this page.") %}
+      <p>Full admin dashboard will be added in SR-14.</p>
+    {% endcall %}
+  {% endif %}
+
+  {% call card("Hello, " ~ current_user.full_name ~ "!", "You are signed in as " ~ current_user.role ~ ".") %}
+    <p>Phone: {{ current_user.phone }}</p>
+    <p>NID status: {{ current_user.verification_status }}</p>
+    {{ button("Sign out", style="secondary", href=url_for('auth.logout')) }}
+  {% endcall %}
+{% endblock %}
