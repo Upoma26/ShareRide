@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "partials/form_field.html" import form_field %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Verify phone · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1 class="auth-title">Verify your phone</h1>
+  <p class="auth-sub">
+    We sent a 6-digit code to your number ending in <strong>{{ phone_end }}</strong>.
+    The code expires in 5 minutes.
+  </p>
+
+  <form method="POST" action="{{ url_for('auth.verify_otp_page') }}">
+    {{ form_field("code", "Verification code", placeholder="6-digit code",
+                  pattern="[0-9]{6}",
+                  error="Enter the 6-digit code.") }}
+
+    {{ button("Verify", block=True) }}
+  </form>
+
+  <form method="POST" action="{{ url_for('auth.resend_otp') }}" class="resend-form">
+    {{ button("Send a new code", style="secondary", block=True) }}
+  </form>
+</div>
+{% endblock %}

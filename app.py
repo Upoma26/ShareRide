@@ -12,6 +12,7 @@ def create_app():
     login_manager.init_app(app)
 
     from models.user import User  # noqa: F401
+    from models.otp import OTP  # noqa: F401
 
     from routes.main import main_bp
     app.register_blueprint(main_bp)
