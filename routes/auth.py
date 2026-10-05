@@ -1,9 +1,12 @@
 import re
+import time
 
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for,
     session, current_app,
 )
+
+from flask_login import login_user, logout_user, login_required, current_user
 
 from extensions import db
 from models.user import User
@@ -151,6 +154,40 @@ def resend_otp():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
     if request.method == "POST":
-        flash("Login will be available soon.", "warning")
+        phone = request.form.get("phone", "").strip()
+        password = request.form.get("password", "")
+        user = User.query.filter_by(phone=phone).first()
+
+        if user is None or not user.check_password(password):
+            flash("Wrong phone number or password.", "danger")
+            return render_template("login.html")
+
+        if not user.phone_verified:
+            session["pending_user_id"] = user.id
+            flash("Please verify your phone number first.", "warning")
+            return redirect(url_for("auth.verify_otp_page"))
+
+        if not user.is_active_account:
+            flash(f"Your account is {user.account_status}. Please contact support.", "danger")
+            return render_template("login.html")
+
+        login_user(user)
+        session.permanent = True
+        session["last_seen"] = time.time()
+        flash(f"Welcome, {user.full_name}!", "success")
+        return redirect(url_for("main.dashboard"))
+
     return render_template("login.html")
+
+
+@auth_bp.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    session.pop("last_seen", None)
+    flash("You have been signed out.", "success")
+    return redirect(url_for("auth.login"))
