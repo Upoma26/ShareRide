@@ -22,6 +22,8 @@ def create_app():
 
     from models.user import User  # noqa: F401
     from models.otp import OTP  # noqa: F401
+    from models.vehicle import Vehicle  # noqa: F401
+    from models.ride import Ride  # noqa: F401
 
     from routes.main import main_bp
     app.register_blueprint(main_bp)
