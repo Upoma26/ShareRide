@@ -1,15 +1,40 @@
 import re
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import (
+    Blueprint, render_template, request, flash, redirect, url_for,
+    session, current_app,
+)
 
 from extensions import db
 from models.user import User
 from utils.uploads import save_nid_file
+from utils.otp_service import create_otp, verify_otp
 
 auth_bp = Blueprint("auth", __name__)
 
 PHONE_PATTERN = re.compile(r"^01[3-9][0-9]{8}$")
 NID_PATTERN = re.compile(r"^([0-9]{10}|[0-9]{13}|[0-9]{17})$")
+
+OTP_MESSAGES = {
+    "wrong": "Wrong code. Please try again.",
+    "expired": "This code has expired. Please request a new one.",
+    "locked": "Too many wrong attempts. Please request a new code.",
+    "missing": "No active code found. Please request a new one.",
+}
+
+
+def get_pending_user():
+    user_id = session.get("pending_user_id")
+    if not user_id:
+        return None
+    return db.session.get(User, user_id)
+
+
+def send_new_code(user):
+    code = create_otp(user)
+    if code and current_app.debug:
+        flash(f"Demo mode: your OTP is {code}", "warning")
+    return code
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -74,10 +99,54 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash("Account created! Please verify your phone number to activate it.", "success")
-        return redirect(url_for("auth.login"))
+        session["pending_user_id"] = user.id
+        send_new_code(user)
+        flash("Account created! We sent a 6-digit code to your phone.", "success")
+        return redirect(url_for("auth.verify_otp_page"))
 
     return render_template("register.html")
+
+
+@auth_bp.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp_page():
+    user = get_pending_user()
+    if user is None:
+        flash("Please register first.", "warning")
+        return redirect(url_for("auth.register"))
+
+    if user.phone_verified:
+        session.pop("pending_user_id", None)
+        flash("Your phone is already verified. Please sign in.", "success")
+        return redirect(url_for("auth.login"))
+
+    if request.method == "POST":
+        code = request.form.get("code", "").strip()
+
+        if not (code.isdigit() and len(code) == 6):
+            flash("Please enter the 6-digit code.", "danger")
+        else:
+            result = verify_otp(user, code)
+            if result == "ok":
+                session.pop("pending_user_id", None)
+                flash("Phone verified! You can now sign in.", "success")
+                return redirect(url_for("auth.login"))
+            flash(OTP_MESSAGES[result], "danger")
+
+    return render_template("verify_otp.html", phone_end=user.phone[-3:])
+
+
+@auth_bp.route("/resend-otp", methods=["POST"])
+def resend_otp():
+    user = get_pending_user()
+    if user is None:
+        flash("Please register first.", "warning")
+        return redirect(url_for("auth.register"))
+
+    if send_new_code(user):
+        flash("A new code has been sent to your phone.", "success")
+    else:
+        flash("Please wait a minute before asking for a new code.", "warning")
+    return redirect(url_for("auth.verify_otp_page"))
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
