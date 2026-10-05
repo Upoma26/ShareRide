@@ -225,3 +225,5 @@ instance/
 db.sqlite3
 static/uploads/*
 !static/uploads/.gitkeep
+# NID uploads (private, never commit)
+uploads/

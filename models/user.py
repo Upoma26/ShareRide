@@ -19,7 +19,8 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="seeker")
 
     nid_number = db.Column(db.String(30), unique=True, nullable=False)
-    nid_document = db.Column(db.String(255))
+    nid_front = db.Column(db.String(255))
+    nid_back = db.Column(db.String(255))
 
     phone_verified = db.Column(db.Boolean, default=False)
     verification_status = db.Column(db.String(20), default="pending")
@@ -43,7 +44,7 @@ class User(UserMixin, db.Model):
     def is_active_account(self):
         return self.account_status == "active"
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<User {self.full_name} ({self.role})>"
 
 
