@@ -16,7 +16,8 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "nid")
+    ALLOWED_NID_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
