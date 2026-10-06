@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/button.html" import button %}
 
 {% block title %}Admin Overview · ShareRide{% endblock %}
 
@@ -8,6 +9,7 @@
     <h1 class="page-title">Admin overview</h1>
     <p class="page-sub">Platform activity at a glance.</p>
   </div>
+  {{ button("Review NIDs (" ~ stats.pending_nid ~ ")", href=url_for('admin.nid_list')) }}
 </div>
 
 <h2 class="section-title">Users</h2>

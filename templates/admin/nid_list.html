@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}NID Verification · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">NID verification</h1>
+    <p class="page-sub">Review identity documents before members can post or book rides.</p>
+  </div>
+  {{ button("Back to overview", style="secondary", href=url_for('admin.overview')) }}
+</div>
+
+<div class="tabs">
+  {% for s in ["pending", "verified", "rejected"] %}
+    <a href="{{ url_for('admin.nid_list', status=s) }}"
+       class="tab {% if status == s %}tab-active{% endif %}">
+      {{ s|capitalize }} <span class="tab-count">{{ counts[s] }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  {% if users %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Phone</th>
+            <th>NID number</th>
+            <th>Registered</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td><strong>{{ user.full_name }}</strong></td>
+              <td>{{ user.role|capitalize }}</td>
+              <td>{{ user.phone }}</td>
+              <td>•••• {{ user.nid_number[-4:] }}</td>
+              <td>{{ user.created_at.strftime("%d %b %Y") }}</td>
+              <td>{{ button("Review", style="secondary", href=url_for('admin.nid_review', user_id=user.id)) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No {{ status }} NID records.</p>
+  {% endif %}
+</div>
+{% endblock %}
