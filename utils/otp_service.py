@@ -5,8 +5,8 @@ from models.otp import OTP, OTP_RESEND_SECONDS, OTP_EXPIRY_MINUTES
 
 
 def send_sms(phone, message):
-    # A real SMS gateway would be called here.
-    # For this project the message is printed in the terminal.
+    
+    
     print(f"[SMS to {phone}] {message}", flush=True)
 
 
@@ -53,3 +53,21 @@ def verify_otp(user, code):
     user.phone_verified = True
     db.session.commit()
     return "ok"
+
+
+def get_otp_timers(user):
+    otp = (
+        OTP.query.filter_by(user_id=user.id)
+        .order_by(OTP.created_at.desc())
+        .first()
+    )
+    if otp is None:
+        return 0, 0
+
+    now = datetime.utcnow()
+    expires_in = max(0, int((otp.expires_at - now).total_seconds()))
+    resend_in = max(0, OTP_RESEND_SECONDS - int((now - otp.created_at).total_seconds()))
+
+    if otp.is_used or otp.is_locked:
+        expires_in = 0
+    return expires_in, resend_in

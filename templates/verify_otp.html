@@ -1,27 +1,101 @@
 {% extends "base.html" %}
-{% from "partials/form_field.html" import form_field %}
 {% from "partials/button.html" import button %}
 
 {% block title %}Verify phone · ShareRide{% endblock %}
 
 {% block content %}
-<div class="auth-card">
+<div class="auth-card otp-card"
+     data-expires="{{ expires_in|default(300) }}"
+     data-resend="{{ resend_in|default(60) }}">
+
+  <div class="otp-icon">📱</div>
   <h1 class="auth-title">Verify your phone</h1>
   <p class="auth-sub">
-    We sent a 6-digit code to your number ending in <strong>{{ phone_end }}</strong>.
-    The code expires in 5 minutes.
+    Enter the 6-digit code we sent to your number ending in
+    <strong>{{ phone_end }}</strong>.
   </p>
 
-  <form method="POST" action="{{ url_for('auth.verify_otp_page') }}">
-    {{ form_field("code", "Verification code", placeholder="6-digit code",
-                  pattern="[0-9]{6}",
-                  error="Enter the 6-digit code.") }}
+  <form method="POST" action="{{ url_for('auth.verify_otp_page') }}" id="otpForm" novalidate>
+    <div class="form-group">
+      <input type="text" id="code" name="code" class="otp-input"
+             inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" pattern="[0-9]{6}" placeholder="••••••"
+             required autofocus aria-label="6-digit verification code">
+      <small class="error-msg">Enter the 6-digit code.</small>
+    </div>
+
+    <p class="otp-timer" id="expiryText">
+      Code expires in <strong id="expiryClock">5:00</strong>
+    </p>
 
     {{ button("Verify", block=True) }}
   </form>
 
-  <form method="POST" action="{{ url_for('auth.resend_otp') }}" class="resend-form">
-    {{ button("Send a new code", style="secondary", block=True) }}
+  <form method="POST" action="{{ url_for('auth.resend_otp') }}" class="otp-resend">
+    <p class="otp-resend-text">Didn't get the code?</p>
+    <button type="submit" id="resendBtn" class="btn btn-secondary btn-block" disabled>
+      Send a new code in <span id="resendClock">60</span>s
+    </button>
   </form>
 </div>
+
+<script>
+  (function () {
+    var card = document.querySelector(".otp-card");
+    var input = document.getElementById("code");
+    var form = document.getElementById("otpForm");
+
+    // Only allow numbers, maximum 6
+    input.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+    });
+
+   
+    form.addEventListener("submit", function (e) {
+      var group = input.closest(".form-group");
+      if (!input.checkValidity()) {
+        group.classList.add("has-error");
+        e.preventDefault();
+      } else {
+        group.classList.remove("has-error");
+      }
+    });
+
+    
+    var expiresLeft = parseInt(card.dataset.expires, 10);
+    var expiryClock = document.getElementById("expiryClock");
+    var expiryText = document.getElementById("expiryText");
+
+    function showExpiry() {
+      if (expiresLeft <= 0) {
+        expiryText.textContent = "This code has expired. Please request a new one.";
+        expiryText.classList.add("otp-expired");
+        return;
+      }
+      var m = Math.floor(expiresLeft / 60);
+      var s = expiresLeft % 60;
+      expiryClock.textContent = m + ":" + (s < 10 ? "0" : "") + s;
+      expiresLeft--;
+      setTimeout(showExpiry, 1000);
+    }
+    showExpiry();
+
+    
+    var resendLeft = parseInt(card.dataset.resend, 10);
+    var resendBtn = document.getElementById("resendBtn");
+    var resendClock = document.getElementById("resendClock");
+
+    function showResend() {
+      if (resendLeft <= 0) {
+        resendBtn.disabled = false;
+        resendBtn.textContent = "Send a new code";
+        return;
+      }
+      resendClock.textContent = resendLeft;
+      resendLeft--;
+      setTimeout(showResend, 1000);
+    }
+    showResend();
+  })();
+</script>
 {% endblock %}
