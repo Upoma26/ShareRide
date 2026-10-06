@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Provider Dashboard · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Hello, {{ current_user.full_name }}</h1>
+    <p class="page-sub">Manage your rides and track your earnings.</p>
+  </div>
+  {{ button("+ Post a ride", href=url_for('provider.post_ride')) }}
+</div>
+
+{% if not current_user.is_verified %}
+  <div class="alert alert-warning">
+    Your NID is <strong>{{ current_user.verification_status }}</strong>.
+    You can post rides after an admin verifies your account.
+  </div>
+{% endif %}
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total rides</span>
+    <span class="stat-value">{{ total_count }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Upcoming</span>
+    <span class="stat-value">{{ upcoming_count }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Earnings</span>
+    <span class="stat-value">৳{{ earnings }}</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">My rides</h2>
+
+  {% if rides %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Seats left</th>
+            <th>Fare / seat</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ride in rides %}
+            <tr>
+              <td><strong>{{ ride.pickup }}</strong> → {{ ride.destination }}</td>
+              <td>{{ ride.ride_date.strftime("%d %b %Y") }}</td>
+              <td>{{ ride.ride_time.strftime("%I:%M %p") }}</td>
+              <td>{{ ride.available_seats }} / {{ ride.total_seats }}</td>
+              <td>৳{{ ride.fare_per_seat }}</td>
+              <td><span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>You have not posted any rides yet.</p>
+      {{ button("Post your first ride", href=url_for('provider.post_ride')) }}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

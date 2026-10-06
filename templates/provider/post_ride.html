@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% from "partials/form_field.html" import form_field %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Post a Ride · ShareRide{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Post a ride</h1>
+      <p class="page-sub">Share your empty seats with people going the same way.</p>
+    </div>
+    {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+  </div>
+
+  {% if not current_user.is_verified %}
+    <div class="alert alert-warning">
+      You can post rides after an admin verifies your NID.
+      Current status: <strong>{{ current_user.verification_status }}</strong>.
+    </div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('provider.post_ride') }}" id="rideForm" novalidate>
+    <fieldset {% if not current_user.is_verified %}disabled{% endif %}>
+
+      <div class="card">
+        <h2 class="card-title">Vehicle</h2>
+
+        {% if vehicles %}
+          <div class="form-group">
+            <label for="vehicle_id">Choose your vehicle</label>
+            <select id="vehicle_id" name="vehicle_id" required>
+              {% for v in vehicles %}
+                <option value="{{ v.id }}">
+                  {{ v.brand }} {{ v.model }} · {{ v.plate_number }} ({{ v.seat_capacity }} seats)
+                </option>
+              {% endfor %}
+            </select>
+            <small class="error-msg">Please choose a vehicle.</small>
+          </div>
+        {% else %}
+          <p class="card-sub">You have no vehicle yet. Add one with this ride.</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="vehicle_type">Vehicle type</label>
+              <select id="vehicle_type" name="vehicle_type" required>
+                {% for t in vehicle_types %}
+                  <option value="{{ t }}">{{ t|capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {{ form_field("plate_number", "Number plate", placeholder="e.g. DHA-GA-11-2233",
+                          error="Please enter the number plate.") }}
+          </div>
+
+          <div class="form-row">
+            {{ form_field("brand", "Brand", placeholder="e.g. Toyota",
+                          error="Please enter the brand.") }}
+            {{ form_field("model", "Model", placeholder="e.g. Axio",
+                          error="Please enter the model.") }}
+          </div>
+
+          <div class="form-row">
+            {{ form_field("color", "Color", placeholder="e.g. White", required=False) }}
+            <div class="form-group">
+              <label for="seat_capacity">Seat capacity</label>
+              <input type="number" id="seat_capacity" name="seat_capacity"
+                     min="1" max="14" placeholder="e.g. 4" required>
+              <small class="error-msg">Seats must be between 1 and 14.</small>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Route and time</h2>
+
+        <div class="form-row">
+          {{ form_field("pickup", "Pickup", placeholder="e.g. Mirpur 10",
+                        error="Please enter the pickup point.") }}
+          {{ form_field("destination", "Destination", placeholder="e.g. Motijheel",
+                        error="Please enter the destination.") }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ride_date">Date</label>
+            <input type="date" id="ride_date" name="ride_date" min="{{ today }}" required>
+            <small class="error-msg">Choose today or a future date.</small>
+          </div>
+          <div class="form-group">
+            <label for="ride_time">Time</label>
+            <input type="time" id="ride_time" name="ride_time" required>
+            <small class="error-msg">Please choose a time.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Seats and fare</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="total_seats">Seats to offer</label>
+            <input type="number" id="total_seats" name="total_seats"
+                   min="1" max="14" placeholder="e.g. 3" required>
+            <small class="error-msg">Seats must be between 1 and 14.</small>
+          </div>
+          <div class="form-group">
+            <label for="fare_per_seat">Fare per seat (৳)</label>
+            <input type="number" id="fare_per_seat" name="fare_per_seat"
+                   min="0" max="5000" step="10" placeholder="e.g. 150" required>
+            <small class="error-msg">Fare must be between ৳0 and ৳5000.</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" rows="3" maxlength="300"
+                    placeholder="e.g. AC car, small bags only"></textarea>
+        </div>
+      </div>
+
+      {{ button("Post ride", block=True) }}
+    </fieldset>
+  </form>
+</div>
+
+<script>
+  document.getElementById("rideForm").addEventListener("submit", function (e) {
+    var ok = true;
+    this.querySelectorAll("input, select").forEach(function (field) {
+      var group = field.closest(".form-group");
+      if (!group) { return; }
+      if (!field.checkValidity()) {
+        group.classList.add("has-error");
+        ok = false;
+      } else {
+        group.classList.remove("has-error");
+      }
+    });
+    if (!ok) { e.preventDefault(); }
+  });
+</script>
+{% endblock %}
