@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Overview · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Admin overview</h1>
+    <p class="page-sub">Platform activity at a glance.</p>
+  </div>
+</div>
+
+<h2 class="section-title">Users</h2>
+<div class="stat-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total users</span>
+    <span class="stat-value">{{ stats.total_users }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Ride seekers</span>
+    <span class="stat-value">{{ stats.seekers }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Ride providers</span>
+    <span class="stat-value">{{ stats.providers }}</span>
+  </div>
+  <div class="stat-card {% if stats.pending_nid %}stat-card-alert{% endif %}">
+    <span class="stat-label">NID pending review</span>
+    <span class="stat-value">{{ stats.pending_nid }}</span>
+  </div>
+</div>
+
+<h2 class="section-title">Rides and safety</h2>
+<div class="stat-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total rides</span>
+    <span class="stat-value">{{ stats.total_rides }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Active rides</span>
+    <span class="stat-value">{{ stats.active_rides }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Completed rides</span>
+    <span class="stat-value">{{ stats.completed_rides }}</span>
+  </div>
+  <div class="stat-card {% if stats.restricted %}stat-card-danger{% endif %}">
+    <span class="stat-label">Suspended or blocked</span>
+    <span class="stat-value">{{ stats.restricted }}</span>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2 class="card-title">Waiting for NID review</h2>
+    <p class="card-sub">Oldest requests first.</p>
+
+    {% if pending_users %}
+      <ul class="user-list">
+        {% for user in pending_users %}
+          <li>
+            <div>
+              <strong>{{ user.full_name }}</strong>
+              <span class="user-meta">{{ user.role|capitalize }} · {{ user.phone }}</span>
+            </div>
+            <span class="pill pill-started">Pending</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">No pending NID reviews.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Newest members</h2>
+    <p class="card-sub">Last 5 registrations.</p>
+
+    {% if recent_users %}
+      <ul class="user-list">
+        {% for user in recent_users %}
+          <li>
+            <div>
+              <strong>{{ user.full_name }}</strong>
+              <span class="user-meta">{{ user.role|capitalize }} · {{ user.created_at.strftime("%d %b %Y") }}</span>
+            </div>
+            <span class="pill pill-{{ user.verification_status }}">{{ user.verification_status|capitalize }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">No members yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
