@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template
-from flask_login import login_required
+from flask import Blueprint, render_template, redirect, url_for
+from flask_login import login_required, current_user
 
 from utils.decorators import role_required
 
@@ -14,6 +14,8 @@ def index():
 @main_bp.route("/dashboard")
 @login_required
 def dashboard():
+    if current_user.role == "provider":
+        return redirect(url_for("provider.dashboard"))
     return render_template("dashboard.html")
 
 

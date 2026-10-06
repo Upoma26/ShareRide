@@ -540,3 +540,167 @@ td {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 8px 0 24px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 26px;
+  color: #0F2434;
+}
+
+.page-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #51697C;
+}
+
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  background: #FFFFFF;
+  border: 1px solid #D4E1EB;
+  border-radius: 14px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #51697C;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1C6EA4;
+}
+
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #51697C;
+  border-bottom: 1px solid #D4E1EB;
+}
+
+.table td {
+  padding: 12px;
+  color: #0F2434;
+  border-bottom: 1px solid #EDF2F6;
+  white-space: nowrap;
+}
+
+
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: #E4EFF7;
+  color: #13537C;
+}
+
+.pill-started {
+  background: #F7EADA;
+  color: #7A4A0C;
+}
+
+.pill-completed {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+.pill-cancelled {
+  background: #F7E8E5;
+  color: #8E2323;
+}
+
+
+.empty-state {
+  text-align: center;
+  padding: 24px 0 8px;
+  color: #51697C;
+}
+
+
+.form-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.form-page fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.form-page fieldset:disabled {
+  opacity: 0.6;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #F7FAFC;
+  border: 1px solid #D4E1EB;
+  border-radius: 10px;
+  color: #0F2434;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1C6EA4;
+  box-shadow: 0 0 0 3px #E4EFF7;
+}
+
+.form-group.has-error select {
+  border-color: #8E2323;
+  background: #F7E8E5;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
