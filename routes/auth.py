@@ -11,7 +11,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db
 from models.user import User
 from utils.uploads import save_nid_file
-from utils.otp_service import create_otp, verify_otp
+from utils.otp_service import create_otp, verify_otp, get_otp_timers
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -135,7 +135,13 @@ def verify_otp_page():
                 return redirect(url_for("auth.login"))
             flash(OTP_MESSAGES[result], "danger")
 
-    return render_template("verify_otp.html", phone_end=user.phone[-3:])
+    expires_in, resend_in = get_otp_timers(user)
+    return render_template(
+        "verify_otp.html",
+        phone_end=user.phone[-3:],
+        expires_in=expires_in,
+        resend_in=resend_in,
+    )
 
 
 @auth_bp.route("/resend-otp", methods=["POST"])

@@ -41,7 +41,7 @@ a:hover { color: var(--primary-dark); }
   padding: 0 20px;
 }
 
-/* ---------- navbar ---------- */
+
 .navbar {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
@@ -71,7 +71,7 @@ a:hover { color: var(--primary-dark); }
 }
 .navlinks a:hover { background: var(--tint); color: var(--primary-dark); }
 
-/* ---------- layout ---------- */
+
 .page { padding: 28px 0 60px; }
 
 .card {
@@ -82,7 +82,7 @@ a:hover { color: var(--primary-dark); }
   margin-bottom: 16px;
 }
 
-/* ---------- buttons ---------- */
+
 .btn {
   display: inline-block;
   padding: 12px 20px;
@@ -105,7 +105,7 @@ a:hover { color: var(--primary-dark); }
 .btn-danger { background: var(--danger); }
 .btn-full { display: block; width: 100%; }
 
-/* ---------- forms ---------- */
+
 .field { margin-bottom: 14px; }
 .field label {
   display: block;
@@ -133,7 +133,7 @@ a:hover { color: var(--primary-dark); }
   outline-offset: -1px;
 }
 
-/* ---------- pills ---------- */
+
 .pill {
   display: inline-block;
   padding: 4px 11px;
@@ -146,7 +146,7 @@ a:hover { color: var(--primary-dark); }
 .pill-warn { background: var(--warn-bg); color: var(--warn); }
 .pill-danger { background: var(--danger-bg); color: var(--danger); }
 
-/* ---------- alerts ---------- */
+
 .alert {
   padding: 13px 16px;
   border-radius: var(--radius);
@@ -158,7 +158,7 @@ a:hover { color: var(--primary-dark); }
 .alert-warn { background: var(--warn-bg); border-color: transparent; color: var(--warn); }
 .alert-danger { background: var(--danger-bg); border-color: transparent; color: var(--danger); }
 
-/* ---------- table ---------- */
+
 .table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; }
 th {
@@ -174,7 +174,7 @@ td {
   font-size: 14px;
 }
 
-/* ---------- footer ---------- */
+
 .footer {
   background: var(--ink);
   color: #AFC9DC;
@@ -190,7 +190,7 @@ td {
   .navbar .wrap { flex-wrap: wrap; }
 }
 
-/* ===== SR-5: Register & Login pages ===== */
+
 .auth-card {
   max-width: 460px;
   margin: 32px auto;
@@ -327,9 +327,9 @@ td {
   font-weight: 600;
 }
 
-/* ===== SR-6: Reusable partials ===== */
 
-/* Alerts */
+
+
 .alerts {
   margin-bottom: 20px;
 }
@@ -363,7 +363,7 @@ td {
   color: #8E2323;
 }
 
-/* Buttons */
+
 .btn {
   display: inline-block;
   padding: 12px 18px;
@@ -405,7 +405,7 @@ td {
   width: 100%;
 }
 
-/* Cards */
+
 .card {
   background: #FFFFFF;
   border: 1px solid #D4E1EB;
@@ -426,7 +426,7 @@ td {
   color: #51697C;
 }
 
-/* Form fields (used everywhere, not only login/register) */
+
 .form-group {
   margin-bottom: 16px;
 }
@@ -481,4 +481,62 @@ td {
 
 .form-group.has-error .error-msg {
   display: block;
+}
+
+.otp-card {
+  text-align: center;
+}
+
+.otp-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  background: #E4EFF7;
+  border: 1px solid #C9DEEE;
+  border-radius: 999px;
+}
+
+.otp-card .otp-input {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  padding: 14px 12px;
+  font-family: "Courier New", monospace;
+}
+
+.otp-timer {
+  margin: 4px 0 16px;
+  font-size: 14px;
+  color: #51697C;
+}
+
+.otp-timer strong {
+  color: #1C6EA4;
+}
+
+.otp-timer.otp-expired {
+  color: #8E2323;
+  font-weight: 600;
+}
+
+.otp-resend {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #D4E1EB;
+}
+
+.otp-resend-text {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #51697C;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
