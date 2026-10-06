@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Review NID · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ user.full_name }}</h1>
+    <p class="page-sub">
+      {{ user.role|capitalize }} · registered {{ user.created_at.strftime("%d %b %Y") }}
+    </p>
+  </div>
+  {{ button("Back to list", style="secondary", href=url_for('admin.nid_list', status=user.verification_status)) }}
+</div>
+
+<div class="alert alert-warning">
+  NID documents are confidential. Every view of these images is logged with your name and time.
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2 class="card-title">Member details</h2>
+    <dl class="detail-list">
+      <dt>Phone</dt><dd>{{ user.phone }}</dd>
+      <dt>Email</dt><dd>{{ user.email }}</dd>
+      <dt>NID number</dt><dd>{{ user.nid_number }}</dd>
+      <dt>Phone verified</dt><dd>{{ "Yes" if user.phone_verified else "No" }}</dd>
+      <dt>NID status</dt>
+      <dd><span class="pill pill-{{ user.verification_status }}">{{ user.verification_status|capitalize }}</span></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Decision</h2>
+    <form method="POST" action="{{ url_for('admin.nid_decide', user_id=user.id) }}" id="decisionForm">
+      <div class="form-group" id="reasonGroup">
+        <label for="reason">Reason (required when rejecting)</label>
+        <textarea id="reason" name="reason" rows="3" maxlength="300"
+                  placeholder="e.g. Photo is blurry, NID number does not match"></textarea>
+        <small class="error-msg">Please write at least 5 characters to explain the rejection.</small>
+      </div>
+      <div class="decision-buttons">
+        <button type="submit" name="decision" value="verified" class="btn btn-primary">Approve</button>
+        <button type="submit" name="decision" value="rejected" class="btn btn-danger" id="rejectBtn">Reject</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">NID documents</h2>
+  <div class="nid-images">
+    {% for side, filename in [("front", user.nid_front), ("back", user.nid_back)] %}
+      <div class="nid-image">
+        <p class="nid-side">{{ side|capitalize }} side</p>
+        {% if not filename %}
+          <p class="empty-state">Not uploaded.</p>
+        {% elif filename.endswith(".pdf") %}
+          {{ button("Open PDF", style="secondary", href=url_for('admin.nid_file', user_id=user.id, side=side)) }}
+        {% else %}
+          <img src="{{ url_for('admin.nid_file', user_id=user.id, side=side) }}"
+               alt="NID {{ side }} side of {{ user.full_name }}">
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2 class="card-title">Review history</h2>
+    {% if reviews %}
+      <ul class="user-list">
+        {% for r in reviews %}
+          <li>
+            <div>
+              <strong>{{ r.decision|capitalize }}</strong> by {{ r.admin.full_name }}
+              <span class="user-meta">
+                {{ r.created_at.strftime("%d %b %Y, %I:%M %p") }}
+                {% if r.reason %} · {{ r.reason }}{% endif %}
+              </span>
+            </div>
+            <span class="pill pill-{{ r.decision }}">{{ r.decision|capitalize }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">No decisions yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Recent access log</h2>
+    {% if access_logs %}
+      <ul class="user-list">
+        {% for log in access_logs %}
+          <li>
+            <div>
+              {{ log.admin.full_name }} viewed the <strong>{{ log.side }}</strong> side
+              <span class="user-meta">{{ log.accessed_at.strftime("%d %b %Y, %I:%M:%S %p") }} · IP {{ log.ip_address }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">No access recorded yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.getElementById("decisionForm").addEventListener("submit", function (e) {
+    var reason = document.getElementById("reason");
+    var group = document.getElementById("reasonGroup");
+    if (e.submitter && e.submitter.value === "rejected" && reason.value.trim().length < 5) {
+      group.classList.add("has-error");
+      e.preventDefault();
+    } else {
+      group.classList.remove("has-error");
+    }
+  });
+</script>
+{% endblock %}
