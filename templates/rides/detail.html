@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <aside class="detail-side">
+ <aside class="detail-side">
     <div class="card booking-box">
       <p class="price">৳{{ ride.fare_per_seat }}</p>
       <p class="price-unit">per seat</p>
@@ -97,20 +97,56 @@
       {% if is_owner %}
         <p class="user-meta">This is your ride.</p>
         {{ button("Manage in dashboard", style="secondary", href=url_for('provider.dashboard'), block=True) }}
-      {% elif can_book %}
-        <div class="form-group">
-          <label for="seats">Seats</label>
-          <select id="seats" name="seats">
-            {% for n in range(1, ride.available_seats + 1) %}
-              <option value="{{ n }}">{{ n }} seat{{ "" if n == 1 else "s" }}</option>
-            {% endfor %}
-          </select>
+
+      {% elif my_booking %}
+        <div class="my-booking">
+          <span class="pill pill-{{ my_booking.status }}">
+            {{ "Waiting for driver" if my_booking.status == "pending" else "Accepted" }}
+          </span>
+          <p class="booking-total">
+            {{ my_booking.seats }} seat{{ "" if my_booking.seats == 1 else "s" }}
+            <strong>৳{{ my_booking.total_fare }}</strong>
+          </p>
+          {% if my_booking.status == "accepted" %}
+            <p class="user-meta">Number plate: <strong>{{ ride.vehicle.plate_number }}</strong></p>
+          {% endif %}
         </div>
-        <p class="booking-total">
-          Total <strong>৳<span id="total">{{ ride.fare_per_seat }}</span></strong>
-        </p>
-        <button type="button" class="btn btn-primary btn-block" disabled>Request to book</button>
-        <p class="user-meta">Booking opens soon.</p>
+        {% if ride.status == "scheduled" and not is_past %}
+          <form method="POST" action="{{ url_for('bookings.cancel', booking_id=my_booking.id) }}"
+                onsubmit="return confirm('Cancel your booking? Your seats will be released.');">
+            <button type="submit" class="btn btn-secondary btn-block">Cancel booking</button>
+          </form>
+        {% endif %}
+
+      {% elif can_book %}
+        {% if not current_user.is_authenticated %}
+          <p class="user-meta">Sign in to request seats on this ride.</p>
+          {{ button("Sign in to book", href=url_for('auth.login', next=request.path), block=True) }}
+        {% elif current_user.role != "seeker" %}
+          <p class="user-meta">Only ride seekers can book rides.</p>
+        {% elif not current_user.is_verified %}
+          <p class="user-meta">
+            You can book after an admin verifies your NID.
+            Current status: <strong>{{ current_user.verification_status }}</strong>.
+          </p>
+        {% else %}
+          <form method="POST" action="{{ url_for('bookings.create', ride_id=ride.id) }}">
+            <div class="form-group">
+              <label for="seats">Seats</label>
+              <select id="seats" name="seats">
+                {% for n in range(1, ride.available_seats + 1) %}
+                  <option value="{{ n }}">{{ n }} seat{{ "" if n == 1 else "s" }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <p class="booking-total">
+              Total <strong>৳<span id="total">{{ ride.fare_per_seat }}</span></strong>
+            </p>
+            <button type="submit" class="btn btn-primary btn-block">Request to book</button>
+          </form>
+          <p class="user-meta">The driver will accept or reject your request.</p>
+        {% endif %}
+
       {% else %}
         <p class="user-meta">This ride is not available for booking.</p>
       {% endif %}
@@ -118,16 +154,15 @@
   </aside>
 </div>
 
-{% if can_book %}
 <script>
   (function () {
-    var fare = {{ ride.fare_per_seat }};
     var select = document.getElementById("seats");
     var total = document.getElementById("total");
+    if (!select || !total) { return; }
+    var fare = {{ ride.fare_per_seat }};
     select.addEventListener("change", function () {
       total.textContent = fare * parseInt(this.value, 10);
     });
   })();
 </script>
-{% endif %}
 {% endblock %}

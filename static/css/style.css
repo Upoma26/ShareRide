@@ -1249,3 +1249,14 @@ a.ride-card {
     position: static;
   }
 }
+
+.my-booking {
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #F7FAFC;
+  border-radius: 10px;
+}
+
+.my-booking .booking-total {
+  margin: 10px 0 0;
+}
