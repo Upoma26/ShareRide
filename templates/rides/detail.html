@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}{{ ride.pickup }} to {{ ride.destination }} · ShareRide{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('rides.search', pickup=ride.pickup) }}" class="back-link">← Back to search</a>
+
+{% if ride.status == "cancelled" %}
+  <div class="alert alert-danger">This ride has been cancelled by the driver.</div>
+{% elif ride.status == "completed" %}
+  <div class="alert alert-warning">This ride has already been completed.</div>
+{% elif is_past %}
+  <div class="alert alert-warning">This ride has already left.</div>
+{% endif %}
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <p class="detail-date">
+        {{ ride.ride_date.strftime("%A, %d %B %Y") }} · {{ ride.ride_time.strftime("%I:%M %p") }}
+      </p>
+
+      <div class="ride-route detail-route">
+        <div class="route-point">
+          <span class="route-dot"></span>
+          <span>{{ ride.pickup }}</span>
+        </div>
+        <div class="route-line"></div>
+        <div class="route-point">
+          <span class="route-dot route-dot-end"></span>
+          <span>{{ ride.destination }}</span>
+        </div>
+      </div>
+
+      <dl class="detail-list detail-facts">
+        <dt>Fare</dt><dd>৳{{ ride.fare_per_seat }} per seat</dd>
+        <dt>Seats left</dt><dd>{{ ride.available_seats }} of {{ ride.total_seats }}</dd>
+        <dt>Status</dt>
+        <dd><span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span></dd>
+      </dl>
+
+      {% if ride.notes %}
+        <div class="ride-notes">
+          <strong>Driver's note</strong>
+          <p>{{ ride.notes }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Driver</h2>
+      <div class="provider-card">
+        <div class="avatar">{{ provider.full_name[:1]|upper }}</div>
+        <div class="provider-info">
+          <div class="ride-provider">
+            {{ provider.full_name }}
+            {% if provider.is_verified %}
+              <span class="badge-verified">✓ NID verified</span>
+            {% endif %}
+          </div>
+
+          <div class="rating">
+            {% if provider.total_trips %}
+              {% set stars = provider.rating|round|int %}
+              <span class="stars">
+                {% for i in range(1, 6) %}{{ "★" if i <= stars else "☆" }}{% endfor %}
+              </span>
+              <span>{{ "%.1f"|format(provider.rating) }} · {{ provider.total_trips }} trip{{ "" if provider.total_trips == 1 else "s" }}</span>
+            {% else %}
+              <span class="badge-new">New driver</span>
+            {% endif %}
+          </div>
+
+          <p class="user-meta">Member since {{ provider.created_at.strftime("%B %Y") }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Vehicle</h2>
+      <dl class="detail-list">
+        <dt>Type</dt><dd>{{ ride.vehicle.vehicle_type|capitalize }}</dd>
+        <dt>Vehicle</dt><dd>{{ ride.vehicle.brand }} {{ ride.vehicle.model }}</dd>
+        {% if ride.vehicle.color %}<dt>Color</dt><dd>{{ ride.vehicle.color }}</dd>{% endif %}
+        <dt>Seats</dt><dd>{{ ride.vehicle.seat_capacity }}</dd>
+      </dl>
+      <p class="user-meta">The number plate is shared after your booking is accepted.</p>
+    </div>
+  </div>
+
+  <aside class="detail-side">
+    <div class="card booking-box">
+      <p class="price">৳{{ ride.fare_per_seat }}</p>
+      <p class="price-unit">per seat</p>
+
+      {% if is_owner %}
+        <p class="user-meta">This is your ride.</p>
+        {{ button("Manage in dashboard", style="secondary", href=url_for('provider.dashboard'), block=True) }}
+      {% elif can_book %}
+        <div class="form-group">
+          <label for="seats">Seats</label>
+          <select id="seats" name="seats">
+            {% for n in range(1, ride.available_seats + 1) %}
+              <option value="{{ n }}">{{ n }} seat{{ "" if n == 1 else "s" }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <p class="booking-total">
+          Total <strong>৳<span id="total">{{ ride.fare_per_seat }}</span></strong>
+        </p>
+        <button type="button" class="btn btn-primary btn-block" disabled>Request to book</button>
+        <p class="user-meta">Booking opens soon.</p>
+      {% else %}
+        <p class="user-meta">This ride is not available for booking.</p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+
+{% if can_book %}
+<script>
+  (function () {
+    var fare = {{ ride.fare_per_seat }};
+    var select = document.getElementById("seats");
+    var total = document.getElementById("total");
+    select.addEventListener("change", function () {
+      total.textContent = fare * parseInt(this.value, 10);
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}
