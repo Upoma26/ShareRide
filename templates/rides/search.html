@@ -3,76 +3,98 @@
 {% block title %}Find a ride · ShareRide{% endblock %}
 
 {% block content %}
-<div class="page-head">
-  <div>
-    <h1 class="page-title">Find a ride</h1>
-    <p class="page-sub">Search rides by route, date and seats.</p>
-  </div>
-</div>
+<section class="search-hero">
+  <h1 class="search-title">Where are you going?</h1>
+  <p class="search-sub">Find verified drivers going your way and share the cost.</p>
 
-<div class="card">
-  <form method="GET" action="{{ url_for('rides.search') }}">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="pickup">Pickup</label>
-        <input type="text" id="pickup" name="pickup" value="{{ pickup }}" placeholder="e.g. Mirpur">
-      </div>
-      <div class="form-group">
-        <label for="destination">Destination</label>
-        <input type="text" id="destination" name="destination" value="{{ destination }}" placeholder="e.g. Motijheel">
-      </div>
+  <form method="GET" action="{{ url_for('rides.search') }}" class="search-bar">
+    <div class="search-field search-field-wide">
+      <label for="pickup">From</label>
+      <input type="text" id="pickup" name="pickup" value="{{ pickup }}" placeholder="Pickup, e.g. Mirpur">
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="date">Date</label>
-        <input type="date" id="date" name="date" value="{{ date_text }}" min="{{ today }}">
-      </div>
-      <div class="form-group">
-        <label for="seats">Seats</label>
-        <input type="number" id="seats" name="seats" value="{{ seats }}" min="1" max="14">
-      </div>
+    <div class="search-field search-field-wide">
+      <label for="destination">To</label>
+      <input type="text" id="destination" name="destination" value="{{ destination }}" placeholder="Destination, e.g. Motijheel">
     </div>
-    <button type="submit" class="btn btn-primary btn-block">Search</button>
+    <div class="search-field">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" value="{{ date_text }}" min="{{ today }}">
+    </div>
+    <div class="search-field">
+      <label for="time">After</label>
+      <input type="time" id="time" name="time" value="{{ time_text }}">
+    </div>
+    <div class="search-field search-field-small">
+      <label for="seats">Seats</label>
+      <input type="number" id="seats" name="seats" value="{{ seats }}" min="1" max="14">
+    </div>
+    <button type="submit" class="btn btn-primary search-btn">Search</button>
   </form>
-</div>
+</section>
 
 {% for error in errors %}
   <div class="alert alert-danger">{{ error }}</div>
 {% endfor %}
 
 {% if searched and not errors %}
-  <div class="card">
-    <h2 class="card-title">{{ rides|length }} ride(s) found</h2>
-    {% if rides %}
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Route</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Seats left</th>
-              <th>Fare / seat</th>
-              <th>Provider</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ride in rides %}
-              <tr>
-                <td><strong>{{ ride.pickup }}</strong> → {{ ride.destination }}</td>
-                <td>{{ ride.ride_date.strftime("%d %b %Y") }}</td>
-                <td>{{ ride.ride_time.strftime("%I:%M %p") }}</td>
-                <td>{{ ride.available_seats }}</td>
-                <td>৳{{ ride.fare_per_seat }}</td>
-                <td>{{ ride.provider.full_name }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="empty-state">No rides match your search. Try a different date or route.</p>
-    {% endif %}
+  <div class="results-head">
+    <h2 class="section-title">
+      {{ rides|length }} ride{{ "" if rides|length == 1 else "s" }} found
+    </h2>
+  </div>
+
+  {% if rides %}
+    <div class="ride-list">
+      {% for ride in rides %}
+        <article class="ride-card">
+          <div class="ride-time">
+            <span class="ride-clock">{{ ride.ride_time.strftime("%I:%M %p") }}</span>
+            <span class="ride-date">{{ ride.ride_date.strftime("%a, %d %b") }}</span>
+          </div>
+
+          <div class="ride-route">
+            <div class="route-point">
+              <span class="route-dot"></span>
+              <span>{{ ride.pickup }}</span>
+            </div>
+            <div class="route-line"></div>
+            <div class="route-point">
+              <span class="route-dot route-dot-end"></span>
+              <span>{{ ride.destination }}</span>
+            </div>
+          </div>
+
+          <div class="ride-meta">
+            <span class="ride-provider">
+              {{ ride.provider.full_name }}
+              {% if ride.provider.is_verified %}
+                <span class="badge-verified">✓ Verified</span>
+              {% endif %}
+            </span>
+            <span class="ride-vehicle">
+              {{ ride.vehicle.brand }} {{ ride.vehicle.model }}{% if ride.vehicle.color %} · {{ ride.vehicle.color }}{% endif %}
+            </span>
+          </div>
+
+          <div class="ride-price">
+            <span class="price">৳{{ ride.fare_per_seat }}</span>
+            <span class="price-unit">per seat</span>
+            <span class="seats-left {% if ride.available_seats <= 1 %}seats-low{% endif %}">
+              {{ ride.available_seats }} seat{{ "" if ride.available_seats == 1 else "s" }} left
+            </span>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state">
+      <p><strong>No rides match your search.</strong></p>
+      <p>Try a nearby area, another date, or fewer seats.</p>
+    </div>
+  {% endif %}
+{% elif not searched %}
+  <div class="card empty-state">
+    <p>Enter where you are going to see available rides.</p>
   </div>
 {% endif %}
 {% endblock %}
