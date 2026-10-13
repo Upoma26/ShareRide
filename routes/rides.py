@@ -1,9 +1,10 @@
 from datetime import date, datetime
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, abort
 from flask_login import current_user
 from sqlalchemy import or_
 
+from extensions import db
 from models.ride import Ride
 from models.user import User
 
@@ -44,6 +45,7 @@ def search_rides(pickup, destination, ride_date, seats, after_time=None):
         query = query.filter(Ride.ride_date >= now.date())
 
     query = query.filter(or_(Ride.ride_date > now.date(), Ride.ride_time > now.time()))
+
     if after_time:
         query = query.filter(Ride.ride_time >= after_time)
 
@@ -68,23 +70,25 @@ def search():
     seats = max(1, min(seats, MAX_SEATS))
 
     errors = []
+
     ride_date = None
     if date_text:
         try:
             ride_date = datetime.strptime(date_text, "%Y-%m-%d").date()
         except ValueError:
             errors.append("Please choose a valid date.")
+
     after_time = None
     if time_text:
         try:
             after_time = datetime.strptime(time_text, "%H:%M").time()
         except ValueError:
-            errors.append("Please choose a valid time.")   
+            errors.append("Please choose a valid time.")
 
     searched = bool(pickup or destination or date_text or time_text)
     rides = []
     if searched and not errors:
-       rides = search_rides(pickup, destination, ride_date, seats, after_time)
+        rides = search_rides(pickup, destination, ride_date, seats, after_time)
 
     return render_template(
         "rides/search.html",
@@ -97,4 +101,32 @@ def search():
         time_text=time_text,
         seats=seats,
         today=date.today().isoformat(),
+    )
+
+
+@rides_bp.route("/<int:ride_id>")
+def detail(ride_id):
+    ride = db.get_or_404(Ride, ride_id)
+    provider = ride.provider
+
+    if provider.account_status != "active":
+        abort(404)
+
+    is_owner = current_user.is_authenticated and current_user.id == ride.provider_id
+    is_past = datetime.combine(ride.ride_date, ride.ride_time) <= datetime.now()
+    can_book = (
+        ride.status == "scheduled"
+        and not is_past
+        and ride.available_seats > 0
+        and provider.is_verified
+        and not is_owner
+    )
+
+    return render_template(
+        "rides/detail.html",
+        ride=ride,
+        provider=provider,
+        is_owner=is_owner,
+        is_past=is_past,
+        can_book=can_book,
     )

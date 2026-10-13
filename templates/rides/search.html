@@ -46,7 +46,7 @@
   {% if rides %}
     <div class="ride-list">
       {% for ride in rides %}
-        <article class="ride-card">
+        <a href="{{ url_for('rides.detail', ride_id=ride.id) }}" class="ride-card">
           <div class="ride-time">
             <span class="ride-clock">{{ ride.ride_time.strftime("%I:%M %p") }}</span>
             <span class="ride-date">{{ ride.ride_date.strftime("%a, %d %b") }}</span>
@@ -83,7 +83,7 @@
               {{ ride.available_seats }} seat{{ "" if ride.available_seats == 1 else "s" }} left
             </span>
           </div>
-        </article>
+        </a>
       {% endfor %}
     </div>
   {% else %}
