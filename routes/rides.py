@@ -20,7 +20,7 @@ def to_int(value):
         return None
 
 
-def search_rides(pickup, destination, ride_date, seats):
+def search_rides(pickup, destination, ride_date, seats, after_time=None):
     now = datetime.now()
 
     query = (
@@ -44,6 +44,8 @@ def search_rides(pickup, destination, ride_date, seats):
         query = query.filter(Ride.ride_date >= now.date())
 
     query = query.filter(or_(Ride.ride_date > now.date(), Ride.ride_time > now.time()))
+    if after_time:
+        query = query.filter(Ride.ride_time >= after_time)
 
     if current_user.is_authenticated:
         query = query.filter(Ride.provider_id != current_user.id)
@@ -60,6 +62,7 @@ def search():
     pickup = request.args.get("pickup", "").strip()[:100]
     destination = request.args.get("destination", "").strip()[:100]
     date_text = request.args.get("date", "").strip()
+    time_text = request.args.get("time", "").strip()
 
     seats = to_int(request.args.get("seats")) or 1
     seats = max(1, min(seats, MAX_SEATS))
@@ -71,11 +74,17 @@ def search():
             ride_date = datetime.strptime(date_text, "%Y-%m-%d").date()
         except ValueError:
             errors.append("Please choose a valid date.")
+    after_time = None
+    if time_text:
+        try:
+            after_time = datetime.strptime(time_text, "%H:%M").time()
+        except ValueError:
+            errors.append("Please choose a valid time.")   
 
-    searched = bool(pickup or destination or date_text)
+    searched = bool(pickup or destination or date_text or time_text)
     rides = []
     if searched and not errors:
-        rides = search_rides(pickup, destination, ride_date, seats)
+       rides = search_rides(pickup, destination, ride_date, seats, after_time)
 
     return render_template(
         "rides/search.html",
@@ -85,6 +94,7 @@ def search():
         pickup=pickup,
         destination=destination,
         date_text=date_text,
+        time_text=time_text,
         seats=seats,
         today=date.today().isoformat(),
     )
