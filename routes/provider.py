@@ -4,9 +4,11 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import current_user
 
 from extensions import db
+from models.booking import Booking
 from models.ride import Ride
 from models.vehicle import Vehicle, VEHICLE_TYPES
 from utils.decorators import role_required
+from utils.seats import release_seats
 
 provider_bp = Blueprint("provider", __name__, url_prefix="/provider")
 
@@ -248,3 +250,60 @@ def cancel_ride(ride_id):
     else:
         flash("Ride cancelled.", "warning")
     return redirect(url_for("provider.dashboard"))
+
+@provider_bp.route("/rides/<int:ride_id>/requests")
+@role_required("provider")
+def ride_requests(ride_id):
+    ride = get_own_ride_or_404(ride_id)
+    bookings = (
+        Booking.query.filter_by(ride_id=ride.id)
+        .order_by(Booking.created_at.asc())
+        .all()
+    )
+    pending = [b for b in bookings if b.status == "pending"]
+    handled = [b for b in bookings if b.status != "pending"]
+
+    return render_template(
+        "provider/requests.html",
+        ride=ride,
+        pending=pending,
+        handled=handled,
+    )
+
+
+@provider_bp.route("/bookings/<int:booking_id>/decide", methods=["POST"])
+@role_required("provider")
+def decide_booking(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    ride = booking.ride
+    if ride.provider_id != current_user.id:
+        abort(404)
+
+    back = redirect(url_for("provider.ride_requests", ride_id=ride.id))
+    decision = request.form.get("decision", "")
+
+    if booking.status != "pending":
+        flash("This request has already been handled.", "warning")
+        return back
+
+    if ride.status != "scheduled" or datetime.combine(ride.ride_date, ride.ride_time) <= datetime.now():
+        flash("This ride has already left, so requests cannot be changed.", "warning")
+        return back
+
+    if decision == "accept":
+        booking.status = "accepted"
+        message = f"Accepted {booking.seeker.full_name}'s request for {booking.seats} seat(s)."
+        category = "success"
+    elif decision == "reject":
+        release_seats(ride.id, booking.seats)
+        booking.status = "rejected"
+        message = f"Rejected {booking.seeker.full_name}'s request. The seats are open again."
+        category = "warning"
+    else:
+        flash("Please choose accept or reject.", "danger")
+        return back
+
+    booking.decided_at = datetime.utcnow()
+    db.session.commit()
+    flash(message, category)
+    return back    

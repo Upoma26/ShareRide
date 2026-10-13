@@ -53,6 +53,7 @@
         </thead>
         <tbody>
           {% for ride in rides %}
+            {% set pending_count = ride.bookings|selectattr("status", "equalto", "pending")|list|length %}
             <tr>
               <td><strong>{{ ride.pickup }}</strong> → {{ ride.destination }}</td>
               <td>{{ ride.ride_date.strftime("%d %b %Y") }}</td>
@@ -61,15 +62,19 @@
               <td>৳{{ ride.fare_per_seat }}</td>
               <td><span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span></td>
               <td>
-                {% if ride.status == "scheduled" %}
-                  <div class="table-actions">
+                <div class="table-actions">
+                  <a href="{{ url_for('provider.ride_requests', ride_id=ride.id) }}"
+                     class="btn btn-sm {% if pending_count %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Requests{% if pending_count %} ({{ pending_count }}){% endif %}
+                  </a>
+                  {% if ride.status == "scheduled" %}
                     <a href="{{ url_for('provider.edit_ride', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">Edit</a>
                     <form method="POST" action="{{ url_for('provider.cancel_ride', ride_id=ride.id) }}"
                           onsubmit="return confirm('Cancel this ride? All its bookings will be cancelled too.');">
                       <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
                     </form>
-                  </div>
-                {% endif %}
+                  {% endif %}
+                </div>
               </td>
             </tr>
           {% endfor %}
