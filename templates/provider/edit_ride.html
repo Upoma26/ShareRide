@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "partials/form_field.html" import form_field %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Edit Ride · ShareRide{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Edit ride</h1>
+      <p class="page-sub">
+        {{ ride.vehicle.brand }} {{ ride.vehicle.model }} · {{ ride.vehicle.plate_number }}
+        ({{ ride.vehicle.seat_capacity }} seats)
+      </p>
+    </div>
+    {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+  </div>
+
+  {% if ride.booked_seats %}
+    <div class="alert alert-warning">
+      {{ ride.booked_seats }} seat(s) are already booked. You cannot offer fewer seats than that.
+    </div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('provider.edit_ride', ride_id=ride.id) }}" id="rideForm" novalidate>
+    <div class="card">
+      <h2 class="card-title">Route and time</h2>
+
+      <div class="form-row">
+        {{ form_field("pickup", "Pickup", value=ride.pickup,
+                      error="Please enter the pickup point.") }}
+        {{ form_field("destination", "Destination", value=ride.destination,
+                      error="Please enter the destination.") }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ride_date">Date</label>
+          <input type="date" id="ride_date" name="ride_date" min="{{ today }}"
+                 value="{{ ride.ride_date.isoformat() }}" required>
+          <small class="error-msg">Choose today or a future date.</small>
+        </div>
+        <div class="form-group">
+          <label for="ride_time">Time</label>
+          <input type="time" id="ride_time" name="ride_time"
+                 value="{{ ride.ride_time.strftime('%H:%M') }}" required>
+          <small class="error-msg">Please choose a time.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Seats and fare</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="total_seats">Seats to offer</label>
+          <input type="number" id="total_seats" name="total_seats"
+                 min="{{ [ride.booked_seats, 1]|max }}" max="{{ ride.vehicle.seat_capacity }}"
+                 value="{{ ride.total_seats }}" required>
+          <small class="error-msg">
+            Seats must be between {{ [ride.booked_seats, 1]|max }} and {{ ride.vehicle.seat_capacity }}.
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="fare_per_seat">Fare per seat (৳)</label>
+          <input type="number" id="fare_per_seat" name="fare_per_seat"
+                 min="0" max="5000" step="10" value="{{ ride.fare_per_seat }}" required>
+          <small class="error-msg">Fare must be between ৳0 and ৳5000.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" rows="3" maxlength="300">{{ ride.notes or "" }}</textarea>
+      </div>
+    </div>
+
+    {{ button("Save changes", block=True) }}
+  </form>
+</div>
+
+<script>
+  document.getElementById("rideForm").addEventListener("submit", function (e) {
+    var ok = true;
+    this.querySelectorAll("input").forEach(function (field) {
+      var group = field.closest(".form-group");
+      if (!group) { return; }
+      if (!field.checkValidity()) {
+        group.classList.add("has-error");
+        ok = false;
+      } else {
+        group.classList.remove("has-error");
+      }
+    });
+    if (!ok) { e.preventDefault(); }
+  });
+</script>
+{% endblock %}

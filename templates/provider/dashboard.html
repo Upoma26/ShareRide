@@ -48,6 +48,7 @@
             <th>Seats left</th>
             <th>Fare / seat</th>
             <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +60,17 @@
               <td>{{ ride.available_seats }} / {{ ride.total_seats }}</td>
               <td>৳{{ ride.fare_per_seat }}</td>
               <td><span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span></td>
+              <td>
+                {% if ride.status == "scheduled" %}
+                  <div class="table-actions">
+                    <a href="{{ url_for('provider.edit_ride', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                    <form method="POST" action="{{ url_for('provider.cancel_ride', ride_id=ride.id) }}"
+                          onsubmit="return confirm('Cancel this ride? All its bookings will be cancelled too.');">
+                      <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                    </form>
+                  </div>
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>

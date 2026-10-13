@@ -5,6 +5,7 @@
 {% block title %}Post a Ride · ShareRide{% endblock %}
 
 {% block content %}
+{% set f = request.form %}
 <div class="form-page">
   <div class="page-head">
     <div>
@@ -32,7 +33,7 @@
             <label for="vehicle_id">Choose your vehicle</label>
             <select id="vehicle_id" name="vehicle_id" required>
               {% for v in vehicles %}
-                <option value="{{ v.id }}">
+                <option value="{{ v.id }}" {% if f.get('vehicle_id') == v.id|string %}selected{% endif %}>
                   {{ v.brand }} {{ v.model }} · {{ v.plate_number }} ({{ v.seat_capacity }} seats)
                 </option>
               {% endfor %}
@@ -47,27 +48,29 @@
               <label for="vehicle_type">Vehicle type</label>
               <select id="vehicle_type" name="vehicle_type" required>
                 {% for t in vehicle_types %}
-                  <option value="{{ t }}">{{ t|capitalize }}</option>
+                  <option value="{{ t }}" {% if f.get('vehicle_type') == t %}selected{% endif %}>{{ t|capitalize }}</option>
                 {% endfor %}
               </select>
             </div>
             {{ form_field("plate_number", "Number plate", placeholder="e.g. DHA-GA-11-2233",
-                          error="Please enter the number plate.") }}
+                          value=f.get('plate_number', ''), error="Please enter the number plate.") }}
           </div>
 
           <div class="form-row">
             {{ form_field("brand", "Brand", placeholder="e.g. Toyota",
-                          error="Please enter the brand.") }}
+                          value=f.get('brand', ''), error="Please enter the brand.") }}
             {{ form_field("model", "Model", placeholder="e.g. Axio",
-                          error="Please enter the model.") }}
+                          value=f.get('model', ''), error="Please enter the model.") }}
           </div>
 
           <div class="form-row">
-            {{ form_field("color", "Color", placeholder="e.g. White", required=False) }}
+            {{ form_field("color", "Color", placeholder="e.g. White",
+                          value=f.get('color', ''), required=False) }}
             <div class="form-group">
               <label for="seat_capacity">Seat capacity</label>
               <input type="number" id="seat_capacity" name="seat_capacity"
-                     min="1" max="14" placeholder="e.g. 4" required>
+                     min="1" max="14" placeholder="e.g. 4"
+                     value="{{ f.get('seat_capacity', '') }}" required>
               <small class="error-msg">Seats must be between 1 and 14.</small>
             </div>
           </div>
@@ -79,20 +82,22 @@
 
         <div class="form-row">
           {{ form_field("pickup", "Pickup", placeholder="e.g. Mirpur 10",
-                        error="Please enter the pickup point.") }}
+                        value=f.get('pickup', ''), error="Please enter the pickup point.") }}
           {{ form_field("destination", "Destination", placeholder="e.g. Motijheel",
-                        error="Please enter the destination.") }}
+                        value=f.get('destination', ''), error="Please enter the destination.") }}
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="ride_date">Date</label>
-            <input type="date" id="ride_date" name="ride_date" min="{{ today }}" required>
+            <input type="date" id="ride_date" name="ride_date" min="{{ today }}"
+                   value="{{ f.get('ride_date', '') }}" required>
             <small class="error-msg">Choose today or a future date.</small>
           </div>
           <div class="form-group">
             <label for="ride_time">Time</label>
-            <input type="time" id="ride_time" name="ride_time" required>
+            <input type="time" id="ride_time" name="ride_time"
+                   value="{{ f.get('ride_time', '') }}" required>
             <small class="error-msg">Please choose a time.</small>
           </div>
         </div>
@@ -105,13 +110,15 @@
           <div class="form-group">
             <label for="total_seats">Seats to offer</label>
             <input type="number" id="total_seats" name="total_seats"
-                   min="1" max="14" placeholder="e.g. 3" required>
+                   min="1" max="14" placeholder="e.g. 3"
+                   value="{{ f.get('total_seats', '') }}" required>
             <small class="error-msg">Seats must be between 1 and 14.</small>
           </div>
           <div class="form-group">
             <label for="fare_per_seat">Fare per seat (৳)</label>
             <input type="number" id="fare_per_seat" name="fare_per_seat"
-                   min="0" max="5000" step="10" placeholder="e.g. 150" required>
+                   min="0" max="5000" step="10" placeholder="e.g. 150"
+                   value="{{ f.get('fare_per_seat', '') }}" required>
             <small class="error-msg">Fare must be between ৳0 and ৳5000.</small>
           </div>
         </div>
@@ -119,7 +126,7 @@
         <div class="form-group">
           <label for="notes">Notes (optional)</label>
           <textarea id="notes" name="notes" rows="3" maxlength="300"
-                    placeholder="e.g. AC car, small bags only"></textarea>
+                    placeholder="e.g. AC car, small bags only">{{ f.get('notes', '') }}</textarea>
         </div>
       </div>
 
