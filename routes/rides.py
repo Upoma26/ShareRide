@@ -5,6 +5,7 @@ from flask_login import current_user
 from sqlalchemy import or_
 
 from extensions import db
+from models.booking import Booking
 from models.ride import Ride
 from models.user import User
 
@@ -114,12 +115,25 @@ def detail(ride_id):
 
     is_owner = current_user.is_authenticated and current_user.id == ride.provider_id
     is_past = datetime.combine(ride.ride_date, ride.ride_time) <= datetime.now()
+
+    my_booking = None
+    if current_user.is_authenticated:
+        my_booking = (
+            Booking.query.filter(
+                Booking.ride_id == ride.id,
+                Booking.seeker_id == current_user.id,
+                Booking.status.in_(["pending", "accepted"]),
+            )
+            .first()
+        )
+
     can_book = (
         ride.status == "scheduled"
         and not is_past
         and ride.available_seats > 0
         and provider.is_verified
         and not is_owner
+        and my_booking is None
     )
 
     return render_template(
@@ -129,4 +143,5 @@ def detail(ride_id):
         is_owner=is_owner,
         is_past=is_past,
         can_book=can_book,
+        my_booking=my_booking,
     )
