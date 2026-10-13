@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Find a ride · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Find a ride</h1>
+    <p class="page-sub">Search rides by route, date and seats.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="GET" action="{{ url_for('rides.search') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="pickup">Pickup</label>
+        <input type="text" id="pickup" name="pickup" value="{{ pickup }}" placeholder="e.g. Mirpur">
+      </div>
+      <div class="form-group">
+        <label for="destination">Destination</label>
+        <input type="text" id="destination" name="destination" value="{{ destination }}" placeholder="e.g. Motijheel">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="{{ date_text }}" min="{{ today }}">
+      </div>
+      <div class="form-group">
+        <label for="seats">Seats</label>
+        <input type="number" id="seats" name="seats" value="{{ seats }}" min="1" max="14">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Search</button>
+  </form>
+</div>
+
+{% for error in errors %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endfor %}
+
+{% if searched and not errors %}
+  <div class="card">
+    <h2 class="card-title">{{ rides|length }} ride(s) found</h2>
+    {% if rides %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Seats left</th>
+              <th>Fare / seat</th>
+              <th>Provider</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ride in rides %}
+              <tr>
+                <td><strong>{{ ride.pickup }}</strong> → {{ ride.destination }}</td>
+                <td>{{ ride.ride_date.strftime("%d %b %Y") }}</td>
+                <td>{{ ride.ride_time.strftime("%I:%M %p") }}</td>
+                <td>{{ ride.available_seats }}</td>
+                <td>৳{{ ride.fare_per_seat }}</td>
+                <td>{{ ride.provider.full_name }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">No rides match your search. Try a different date or route.</p>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}
