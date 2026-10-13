@@ -1260,3 +1260,24 @@ a.ride-card {
 .my-booking .booking-total {
   margin: 10px 0 0;
 }
+
+.pill-booking-pending {
+  background: #F7EADA;
+  color: #7A4A0C;
+}
+
+.pill-booking-accepted {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+.pill-booking-rejected,
+.pill-booking-cancelled {
+  background: #F7E8E5;
+  color: #8E2323;
+}
+
+.pill-booking-completed {
+  background: #E4EFF7;
+  color: #13537C;
+}
