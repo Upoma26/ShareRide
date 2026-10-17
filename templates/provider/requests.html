@@ -9,18 +9,32 @@
     <h1 class="page-title">Seat requests</h1>
     <p class="page-sub">
       {{ ride.pickup }} → {{ ride.destination }} ·
-      {{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }} ·
-      {{ ride.available_seats }} of {{ ride.total_seats }} seats left
+      {{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }}
     </p>
   </div>
   {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card {% if pending %}stat-card-alert{% endif %}">
+    <span class="stat-label">Waiting</span>
+    <span class="stat-value">{{ pending|length }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Seats booked</span>
+    <span class="stat-value">{{ ride.booked_seats }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Seats left</span>
+    <span class="stat-value">{{ ride.available_seats }} / {{ ride.total_seats }}</span>
+  </div>
 </div>
 
 <div class="card">
   <h2 class="card-title">Waiting for your answer ({{ pending|length }})</h2>
 
   {% if pending %}
-    <ul class="user-list">
+    <ul class="user-list request-list">
       {% for b in pending %}
         <li>
           <div>
@@ -66,4 +80,4 @@
     <p class="empty-state">Nothing here yet.</p>
   {% endif %}
 </div>
-{% endblock %}
+{% endblock %}qa

@@ -15,6 +15,9 @@
         <a href="{{ url_for('main.index') }}">Home</a>
         <a href="{{ url_for('rides.search') }}">Find a ride</a>
       {% if current_user.is_authenticated %}
+          {% if current_user.role == "seeker" %}
+            <a href="{{ url_for('bookings.mine') }}">My bookings</a>
+          {% endif %}
           <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
           <a href="{{ url_for('auth.logout') }}">Sign out</a>
         {% else %}
