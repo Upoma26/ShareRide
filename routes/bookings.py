@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, request, flash, redirect, url_for, abort
+from flask import Blueprint, render_template, request, flash, redirect, url_for, abort
 from flask_login import current_user
 
 from extensions import db
@@ -29,6 +29,30 @@ def find_active_booking(ride_id, seeker_id):
         Booking.seeker_id == seeker_id,
         Booking.status.in_(["pending", "accepted"]),
     ).first()
+
+
+@bookings_bp.route("/mine")
+@role_required("seeker")
+def mine():
+    bookings = (
+        Booking.query.filter_by(seeker_id=current_user.id)
+        .order_by(Booking.created_at.desc())
+        .all()
+    )
+
+    upcoming = []
+    past = []
+    for booking in bookings:
+        ride = booking.ride
+        still_ahead = ride.status == "started" or not ride_has_left(ride)
+        if booking.is_active and ride.status in ("scheduled", "started") and still_ahead:
+            upcoming.append(booking)
+        else:
+            past.append(booking)
+
+    upcoming.sort(key=lambda b: (b.ride.ride_date, b.ride.ride_time))
+
+    return render_template("bookings/mine.html", upcoming=upcoming, past=past)
 
 
 @bookings_bp.route("/ride/<int:ride_id>", methods=["POST"])
@@ -100,4 +124,6 @@ def cancel(booking_id):
         db.session.commit()
         flash("Your booking has been cancelled and the seats were released.", "success")
 
+    if request.form.get("back") == "mine":
+        return redirect(url_for("bookings.mine"))
     return redirect(url_for("rides.detail", ride_id=ride.id))
