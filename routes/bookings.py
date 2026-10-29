@@ -56,6 +56,24 @@ def mine():
     return render_template("bookings/mine.html", upcoming=upcoming, past=past)
 
 
+@bookings_bp.route("/history")
+@role_required("seeker")
+def history():
+    trips = Booking.query.filter_by(seeker_id=current_user.id, status="completed").all()
+    trips.sort(key=lambda b: (b.ride.ride_date, b.ride.ride_time), reverse=True)
+
+    paid = [b for b in trips if b.payment]
+    total_spent = sum(b.payment.amount for b in paid)
+    unpaid = len(trips) - len(paid)
+
+    return render_template(
+        "bookings/history.html",
+        trips=trips,
+        total_spent=total_spent,
+        unpaid=unpaid,
+    )
+
+
 @bookings_bp.route("/ride/<int:ride_id>", methods=["POST"])
 @role_required("seeker")
 def create(ride_id):
