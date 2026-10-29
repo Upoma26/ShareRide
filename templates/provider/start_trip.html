@@ -24,7 +24,9 @@
     {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
   </div>
 </div>
-
+{% if ride.status == "started" %}
+  <a href="{{ url_for('rides.active', ride_id=ride.id) }}" class="btn btn-danger btn-block box-action">Open active ride & SOS</a>
+{% endif %}
 <div class="alert alert-warning">
   Ask each passenger for their 4-digit Trip PIN when they get in. The trip starts after the first correct PIN.
 </div>

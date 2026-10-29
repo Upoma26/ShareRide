@@ -1,12 +1,13 @@
 from datetime import date, datetime
 
-from flask import Blueprint, render_template, request, abort
-from flask_login import current_user
+from flask import Blueprint, render_template, request, abort, flash, redirect, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from extensions import db
 from models.booking import Booking
 from models.ride import Ride
+from models.sos import SosAlert
 from models.user import User
 
 rides_bp = Blueprint("rides", __name__, url_prefix="/rides")
@@ -18,6 +19,13 @@ MAX_RESULTS = 50
 def to_int(value):
     try:
         return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def to_float(value):
+    try:
+        return float(value)
     except (TypeError, ValueError):
         return None
 
@@ -58,6 +66,19 @@ def search_rides(pickup, destination, ride_date, seats, after_time=None):
         .limit(MAX_RESULTS)
         .all()
     )
+
+
+def get_trip_role(ride):
+    if not current_user.is_authenticated:
+        return None
+    if ride.provider_id == current_user.id:
+        return "driver"
+    booking = Booking.query.filter(
+        Booking.ride_id == ride.id,
+        Booking.seeker_id == current_user.id,
+        Booking.status.in_(["accepted", "onboard"]),
+    ).first()
+    return "passenger" if booking else None
 
 
 @rides_bp.route("/search")
@@ -145,3 +166,57 @@ def detail(ride_id):
         can_book=can_book,
         my_booking=my_booking,
     )
+
+
+@rides_bp.route("/<int:ride_id>/active")
+@login_required
+def active(ride_id):
+    ride = db.get_or_404(Ride, ride_id)
+    role = get_trip_role(ride)
+    if role is None:
+        abort(404)
+
+    if ride.status != "started":
+        flash("This ride is not in progress.", "warning")
+        return redirect(url_for("rides.detail", ride_id=ride.id))
+
+    passengers = [b for b in ride.bookings if b.status == "onboard"]
+    my_alerts = (
+        SosAlert.query.filter_by(ride_id=ride.id, user_id=current_user.id)
+        .order_by(SosAlert.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "rides/active.html",
+        ride=ride,
+        role=role,
+        passengers=passengers,
+        my_alerts=my_alerts,
+    )
+
+
+@rides_bp.route("/<int:ride_id>/sos", methods=["POST"])
+@login_required
+def sos(ride_id):
+    ride = db.get_or_404(Ride, ride_id)
+    if get_trip_role(ride) is None:
+        abort(404)
+
+    if ride.status != "started":
+        flash("SOS is available only while the ride is in progress.", "warning")
+        return redirect(url_for("rides.detail", ride_id=ride.id))
+
+    alert = SosAlert(
+        ride_id=ride.id,
+        user_id=current_user.id,
+        latitude=to_float(request.form.get("latitude")),
+        longitude=to_float(request.form.get("longitude")),
+        message=request.form.get("message", "").strip()[:300] or None,
+    )
+    db.session.add(alert)
+    db.session.commit()
+
+    print(f"[SOS] Ride {ride.id} by {current_user.full_name} at {alert.latitude}, {alert.longitude}", flush=True)
+    flash("SOS sent. ShareRide admins have been alerted. If you are in immediate danger, call 999.", "danger")
+    return redirect(url_for("rides.active", ride_id=ride.id))

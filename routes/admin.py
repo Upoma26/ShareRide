@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for,
     abort, send_from_directory, current_app,
@@ -8,6 +10,7 @@ from extensions import db
 from models.user import User
 from models.ride import Ride
 from models.nid import NidReview, NidAccessLog
+from models.sos import SosAlert
 from utils.decorators import role_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -45,12 +48,14 @@ def overview():
         .all()
     )
     recent_users = members.order_by(User.created_at.desc()).limit(5).all()
+    open_sos = SosAlert.query.filter_by(status="open").order_by(SosAlert.created_at.desc()).all()
 
     return render_template(
         "admin/overview.html",
         stats=stats,
         pending_users=pending_users,
         recent_users=recent_users,
+        open_sos=open_sos,
     )
 
 
@@ -148,3 +153,16 @@ def nid_decide(user_id):
     else:
         flash(f"{user.full_name}'s NID has been rejected.", "warning")
     return redirect(url_for("admin.nid_list"))
+
+
+@admin_bp.route("/sos/<int:alert_id>/resolve", methods=["POST"])
+@role_required("admin")
+def resolve_sos(alert_id):
+    alert = db.get_or_404(SosAlert, alert_id)
+    if alert.status == "open":
+        alert.status = "resolved"
+        alert.resolved_at = datetime.utcnow()
+        alert.resolved_by = current_user.id
+        db.session.commit()
+        flash("SOS alert marked as resolved.", "success")
+    return redirect(url_for("admin.overview"))

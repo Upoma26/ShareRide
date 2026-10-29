@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Ride in progress · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Ride in progress</h1>
+    <p class="page-sub">
+      Started {{ ride.started_at.strftime("%I:%M %p") if ride.started_at else "" }} ·
+      you are the {{ role }}
+    </p>
+  </div>
+  <span class="pill pill-started">● Live</span>
+</div>
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <div class="ride-route detail-route">
+        <div class="route-point"><span class="route-dot"></span><span>{{ ride.pickup }}</span></div>
+        <div class="route-line"></div>
+        <div class="route-point"><span class="route-dot route-dot-end"></span><span>{{ ride.destination }}</span></div>
+      </div>
+      <dl class="detail-list detail-facts">
+        <dt>Driver</dt><dd>{{ ride.provider.full_name }} · {{ ride.provider.phone }}</dd>
+        <dt>Vehicle</dt><dd>{{ ride.vehicle.brand }} {{ ride.vehicle.model }} · {{ ride.vehicle.plate_number }}</dd>
+      </dl>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">On board ({{ passengers|length }})</h2>
+      {% if passengers %}
+        <ul class="user-list">
+          {% for b in passengers %}
+            <li>
+              <div>
+                <strong>{{ b.seeker.full_name }}</strong>
+                <span class="user-meta">{{ b.seats }} seat{{ "" if b.seats == 1 else "s" }}</span>
+              </div>
+              <span class="pill pill-booking-onboard">✓ On board</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No passengers have boarded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="detail-side">
+    <div class="card sos-panel">
+      <h2 class="card-title">Emergency</h2>
+      <p class="user-meta">
+        Press SOS if you feel unsafe. Your location and this trip will be sent to ShareRide admins.
+      </p>
+
+      <form method="POST" action="{{ url_for('rides.sos', ride_id=ride.id) }}" id="sosForm">
+        <input type="hidden" name="latitude" id="lat">
+        <input type="hidden" name="longitude" id="lng">
+        <div class="form-group">
+          <textarea name="message" rows="2" maxlength="300" placeholder="What is happening? (optional)"></textarea>
+        </div>
+        <button type="submit" class="sos-btn" id="sosBtn">SOS</button>
+      </form>
+
+      <a href="tel:999" class="btn btn-secondary btn-block box-action">Call 999</a>
+
+      {% if my_alerts %}
+        <p class="user-meta box-action">
+          You sent {{ my_alerts|length }} alert(s). Last at {{ my_alerts[0].created_at.strftime("%I:%M %p") }}
+          · {{ my_alerts[0].status|capitalize }}
+        </p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById("sosForm");
+    var btn = document.getElementById("sosBtn");
+    var sent = false;
+
+    form.addEventListener("submit", function (e) {
+      if (sent) { return; }
+      e.preventDefault();
+      if (!confirm("Send an SOS alert to ShareRide now?")) { return; }
+
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      function send() {
+        sent = true;
+        form.submit();
+      }
+
+      if (!navigator.geolocation) { send(); return; }
+
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          document.getElementById("lat").value = pos.coords.latitude;
+          document.getElementById("lng").value = pos.coords.longitude;
+          send();
+        },
+        send,
+        { timeout: 5000 }
+      );
+    });
+  })();
+</script>
+{% endblock %}
