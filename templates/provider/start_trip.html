@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Start trip · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">
+      {% if ride.status == "started" %}Trip in progress{% else %}Start trip{% endif %}
+    </h1>
+    <p class="page-sub">
+      {{ ride.pickup }} → {{ ride.destination }} ·
+      {{ ride.ride_date.strftime("%d %b") }}, {{ ride.ride_time.strftime("%I:%M %p") }}
+    </p>
+  </div>
+  <div class="head-actions">
+    {% if ride.status == "started" %}
+      <form method="POST" action="{{ url_for('provider.complete_trip', ride_id=ride.id) }}"
+            onsubmit="return confirm('Mark this trip as completed? Passengers who did not board will be cancelled.');">
+        <button type="submit" class="btn btn-primary">Complete trip</button>
+      </form>
+    {% endif %}
+    {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+  </div>
+</div>
+
+<div class="alert alert-warning">
+  Ask each passenger for their 4-digit Trip PIN when they get in. The trip starts after the first correct PIN.
+</div>
+
+<h2 class="section-title">Waiting to board ({{ waiting|length }})</h2>
+{% if waiting %}
+  <div class="ride-list">
+    {% for b in waiting %}
+      <article class="checkin-card">
+        <div class="avatar">{{ b.seeker.full_name[:1]|upper }}</div>
+        <div class="request-info">
+          <div class="ride-provider">{{ b.seeker.full_name }}</div>
+          <span class="user-meta">
+            {{ b.seats }} seat{{ "" if b.seats == 1 else "s" }} · ৳{{ b.total_fare }} · {{ b.seeker.phone }}
+          </span>
+          {% if not b.trip_pin_hash %}
+            <span class="user-meta">Passenger has not opened a Trip PIN yet.</span>
+          {% elif b.pin_attempts %}
+            <span class="attempts-left">{{ max_attempts - b.pin_attempts }} attempt(s) left</span>
+          {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('provider.verify_pin', booking_id=b.id) }}" class="checkin-form">
+          <input type="text" name="pin" class="pin-input-lg" inputmode="numeric" maxlength="4"
+                 pattern="[0-9]{4}" placeholder="••••" autocomplete="off" required>
+          <button type="submit" class="btn btn-primary">Check in</button>
+        </form>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card empty-state"><p>No passengers are waiting.</p></div>
+{% endif %}
+
+<h2 class="section-title section-gap">On board ({{ onboard|length }})</h2>
+{% if onboard %}
+  <div class="card">
+    <ul class="user-list">
+      {% for b in onboard %}
+        <li>
+          <div>
+            <strong>{{ b.seeker.full_name }}</strong>
+            <span class="user-meta">{{ b.seats }} seat{{ "" if b.seats == 1 else "s" }} · ৳{{ b.total_fare }}</span>
+          </div>
+          <span class="pill pill-booking-onboard">✓ On board</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% else %}
+  <div class="card empty-state"><p>Nobody has boarded yet.</p></div>
+{% endif %}
+{% endblock %}

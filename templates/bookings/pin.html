@@ -19,6 +19,6 @@
     If you forget it, open a new one and the old PIN will stop working.
   </div>
 
-  {{ button("Back to ride", style="secondary", href=url_for('rides.detail', ride_id=booking.ride_id), block=True) }}
+ {{ button("Back to booking", style="secondary", href=url_for('bookings.detail', booking_id=booking.id), block=True) }}
 </div>
 {% endblock %}

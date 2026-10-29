@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Booking #{{ booking.id }} · ShareRide{% endblock %}
+
+{% block content %}
+{% set order = ["pending", "accepted", "onboard", "completed"] %}
+{% set labels = ["Requested", "Accepted", "On board", "Completed"] %}
+{% set current = order.index(booking.status) if booking.status in order else -1 %}
+
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Booking #{{ booking.id }}</h1>
+    <p class="page-sub">{{ ride.pickup }} → {{ ride.destination }}</p>
+  </div>
+  {{ button("My bookings", style="secondary", href=url_for('bookings.mine')) }}
+</div>
+
+{% if booking.status == "rejected" %}
+  <div class="alert alert-danger">The driver could not take this request. Please search for another ride.</div>
+{% elif booking.status == "cancelled" %}
+  <div class="alert alert-warning">This booking was cancelled.</div>
+{% else %}
+  <ol class="timeline">
+    {% for label in labels %}
+      <li class="timeline-step {% if loop.index0 < current or booking.status == 'completed' %}done{% elif loop.index0 == current %}current{% endif %}">
+        <span class="timeline-dot">{% if loop.index0 < current or booking.status == "completed" %}✓{% else %}{{ loop.index }}{% endif %}</span>
+        <span class="timeline-label">{{ label }}</span>
+      </li>
+    {% endfor %}
+  </ol>
+
+  <div class="alert alert-success">
+    {% if booking.status == "pending" %}Waiting for the driver to accept your request.
+    {% elif booking.status == "accepted" %}Your seat is confirmed. Open your Trip PIN when you get in the car.
+    {% elif booking.status == "onboard" %}You are on board. Have a safe trip!
+    {% elif booking.status == "completed" %}Trip completed. Thank you for riding with ShareRide.
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <p class="detail-date">
+        {{ ride.ride_date.strftime("%A, %d %B %Y") }} · {{ ride.ride_time.strftime("%I:%M %p") }}
+      </p>
+      <div class="ride-route detail-route">
+        <div class="route-point"><span class="route-dot"></span><span>{{ ride.pickup }}</span></div>
+        <div class="route-line"></div>
+        <div class="route-point"><span class="route-dot route-dot-end"></span><span>{{ ride.destination }}</span></div>
+      </div>
+      {% if ride.notes %}
+        <div class="ride-notes"><strong>Driver's note</strong><p>{{ ride.notes }}</p></div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Driver and vehicle</h2>
+      <div class="provider-card">
+        <div class="avatar">{{ ride.provider.full_name[:1]|upper }}</div>
+        <div class="provider-info">
+          <div class="ride-provider">
+            {{ ride.provider.full_name }}
+            {% if ride.provider.is_verified %}<span class="badge-verified">✓ NID verified</span>{% endif %}
+          </div>
+          <span class="ride-vehicle">
+            {{ ride.vehicle.brand }} {{ ride.vehicle.model }}{% if ride.vehicle.color %} · {{ ride.vehicle.color }}{% endif %}
+          </span>
+          {% if booking.status in ("accepted", "onboard") %}
+            <span class="ride-vehicle">Plate: <strong>{{ ride.vehicle.plate_number }}</strong></span>
+            <span class="ride-vehicle">Phone: <strong>{{ ride.provider.phone }}</strong></span>
+          {% else %}
+            <span class="user-meta">Plate and phone are shared after the driver accepts.</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="detail-side">
+    <div class="card booking-box">
+      <h2 class="card-title">Booking summary</h2>
+      <dl class="detail-list">
+        <dt>Seats</dt><dd>{{ booking.seats }}</dd>
+        <dt>Fare</dt><dd>৳{{ ride.fare_per_seat }} × {{ booking.seats }}</dd>
+        <dt>Total</dt><dd>৳{{ booking.total_fare }}</dd>
+        <dt>Status</dt><dd><span class="pill pill-booking-{{ booking.status }}">{{ booking.status|capitalize }}</span></dd>
+        <dt>Booked</dt><dd>{{ booking.created_at.strftime("%d %b, %I:%M %p") }}</dd>
+      </dl>
+
+      {% if can_show_pin %}
+        <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=booking.id) }}" class="box-action">
+          <button type="submit" class="btn btn-primary btn-block">Show my Trip PIN</button>
+        </form>
+      {% endif %}
+
+      {% if can_cancel %}
+        <form method="POST" action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" class="box-action"
+              onsubmit="return confirm('Cancel this booking? Your seats will be released.');">
+          <input type="hidden" name="back" value="mine">
+          <button type="submit" class="btn btn-secondary btn-block">Cancel booking</button>
+        </form>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
