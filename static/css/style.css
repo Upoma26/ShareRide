@@ -1686,3 +1686,70 @@ a.ride-card {
   margin: 4px 0 14px;
   font-size: 14px;
 }
+
+.rate-card {
+  text-align: center;
+}
+
+.rate-avatar {
+  margin: 0 auto 12px;
+}
+
+.star-input {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.star-input input {
+  display: none;
+}
+
+.star-input label {
+  font-size: 42px;
+  line-height: 1;
+  color: #D4E1EB;
+  cursor: pointer;
+  transition: color 0.1s, transform 0.1s;
+}
+
+.star-input label:hover,
+.star-input label:hover ~ label,
+.star-input input:checked ~ label {
+  color: #D99A1E;
+}
+
+.star-input label:hover {
+  transform: scale(1.15);
+}
+
+.star-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #51697C;
+}
+
+.rate-skip {
+  margin-top: 14px;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.review {
+  padding: 10px 12px;
+  background: #F7FAFC;
+  border-radius: 10px;
+}
+
+.review p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #0F2434;
+}

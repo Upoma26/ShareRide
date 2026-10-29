@@ -101,6 +101,14 @@
         <a href="{{ url_for('payments.pay', booking_id=booking.id) }}" class="btn btn-primary btn-block box-action">Pay ৳{{ booking.total_fare }}</a>
       {% endif %}
 
+      {% if booking.status == "completed" %}
+        {% if booking.ratings|selectattr("rater_id", "equalto", current_user.id)|list %}
+          <p class="user-meta box-action">✓ You rated this trip.</p>
+        {% else %}
+          <a href="{{ url_for('ratings.rate', booking_id=booking.id) }}" class="btn btn-primary btn-block box-action">⭐ Rate your driver</a>
+        {% endif %}
+      {% endif %}
+
       
       {% if can_show_pin %}
         <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=booking.id) }}" class="box-action">
