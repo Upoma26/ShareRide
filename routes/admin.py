@@ -5,10 +5,11 @@ from flask import (
     abort, send_from_directory, current_app,
 )
 from flask_login import current_user
+from sqlalchemy import or_
 
 from extensions import db
 from models.user import User
-from models.ride import Ride
+from models.ride import Ride, RIDE_STATUSES
 from models.nid import NidReview, NidAccessLog
 from models.sos import SosAlert
 from utils.decorators import role_required
@@ -66,6 +67,78 @@ def overview():
     )
 
 
+@admin_bp.route("/users")
+@role_required("admin")
+def users():
+    q = request.args.get("q", "").strip()[:100]
+    role = request.args.get("role", "")
+    status = request.args.get("status", "")
+
+    query = User.query.filter(User.role != "admin")
+
+    if q:
+        like = f"%{q}%"
+        query = query.filter(or_(
+            User.full_name.ilike(like),
+            User.phone.ilike(like),
+            User.email.ilike(like),
+        ))
+    if role in ("seeker", "provider"):
+        query = query.filter(User.role == role)
+    if status in ("active", "suspended", "blocked"):
+        query = query.filter(User.account_status == status)
+
+    members = query.order_by(User.created_at.desc()).limit(200).all()
+
+    return render_template(
+        "admin/users.html",
+        members=members,
+        q=q,
+        role=role,
+        status=status,
+    )
+
+
+@admin_bp.route("/rides")
+@role_required("admin")
+def rides():
+    status = request.args.get("status", "")
+    date_text = request.args.get("date", "").strip()
+    q = request.args.get("q", "").strip()[:100]
+
+    query = Ride.query
+
+    if status in RIDE_STATUSES:
+        query = query.filter(Ride.status == status)
+
+    if date_text:
+        try:
+            ride_date = datetime.strptime(date_text, "%Y-%m-%d").date()
+            query = query.filter(Ride.ride_date == ride_date)
+        except ValueError:
+            flash("Please choose a valid date.", "danger")
+
+    if q:
+        like = f"%{q}%"
+        query = query.filter(or_(Ride.pickup.ilike(like), Ride.destination.ilike(like)))
+
+    ride_list = (
+        query.order_by(Ride.ride_date.desc(), Ride.ride_time.desc())
+        .limit(200)
+        .all()
+    )
+    counts = {s: Ride.query.filter_by(status=s).count() for s in RIDE_STATUSES}
+
+    return render_template(
+        "admin/rides.html",
+        ride_list=ride_list,
+        counts=counts,
+        status=status,
+        date_text=date_text,
+        q=q,
+    )
+
+
 @admin_bp.route("/nid")
 @role_required("admin")
 def nid_list():
@@ -74,14 +147,14 @@ def nid_list():
         status = "pending"
 
     members = User.query.filter(User.role != "admin")
-    users = (
+    users_list = (
         members.filter(User.verification_status == status)
         .order_by(User.created_at.asc())
         .all()
     )
     counts = {s: members.filter(User.verification_status == s).count() for s in NID_STATUSES}
 
-    return render_template("admin/nid_list.html", users=users, status=status, counts=counts)
+    return render_template("admin/nid_list.html", users=users_list, status=status, counts=counts)
 
 
 @admin_bp.route("/nid/<int:user_id>")

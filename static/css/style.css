@@ -1772,3 +1772,39 @@ a.ride-card {
   background: #F7E8E5;
   color: #8E2323;
 }
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.filter-bar input,
+.filter-bar select {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #F7FAFC;
+  border: 1px solid #D4E1EB;
+  border-radius: 10px;
+  color: #0F2434;
+}
+
+.filter-bar input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+.table .user-meta {
+  margin-top: 2px;
+}
+
+.row-muted td {
+  opacity: 0.6;
+}
+
+.row-alert td {
+  background: #FDF3F1;
+}
