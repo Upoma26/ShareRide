@@ -42,6 +42,8 @@ def create_app():
     app.register_blueprint(rides_bp)
     from routes.bookings import bookings_bp
     app.register_blueprint(bookings_bp)
+    from routes.payments import payments_bp
+    app.register_blueprint(payments_bp)
     from routes.admin import admin_bp
     app.register_blueprint(admin_bp)
 

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Receipt {{ payment.receipt_number }} · ShareRide{% endblock %}
+
+{% block content %}
+<div class="receipt">
+  <div class="receipt-head">
+    <div>
+      <h1 class="receipt-brand">ShareRide</h1>
+      <p class="user-meta">Payment receipt</p>
+    </div>
+    <div class="receipt-number">
+      <span class="user-meta">Receipt no.</span>
+      <strong>{{ payment.receipt_number }}</strong>
+    </div>
+  </div>
+
+  <div class="receipt-paid">✓ {{ payment.status|upper }}</div>
+
+  <dl class="detail-list receipt-list">
+    <dt>Date</dt><dd>{{ payment.paid_at.strftime("%d %B %Y, %I:%M %p") }}</dd>
+    <dt>Passenger</dt><dd>{{ booking.seeker.full_name }}</dd>
+    <dt>Driver</dt><dd>{{ ride.provider.full_name }}</dd>
+    <dt>Route</dt><dd>{{ ride.pickup }} → {{ ride.destination }}</dd>
+    <dt>Trip date</dt><dd>{{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }}</dd>
+    <dt>Vehicle</dt><dd>{{ ride.vehicle.brand }} {{ ride.vehicle.model }} · {{ ride.vehicle.plate_number }}</dd>
+    <dt>Method</dt><dd>{{ "bKash" if payment.method == "bkash" else payment.method|capitalize }}</dd>
+    {% if payment.transaction_ref %}
+      <dt>Transaction ID</dt><dd>{{ payment.transaction_ref }}</dd>
+    {% endif %}
+  </dl>
+
+  <table class="receipt-table">
+    <tr><td>Fare per seat</td><td>৳{{ ride.fare_per_seat }}</td></tr>
+    <tr><td>Seats</td><td>× {{ booking.seats }}</td></tr>
+    <tr class="receipt-total"><td>Total paid</td><td>৳{{ payment.amount }}</td></tr>
+  </table>
+
+  <p class="user-meta receipt-foot">Thank you for riding with ShareRide.</p>
+
+  <div class="receipt-actions">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Print receipt</button>
+    {% if current_user.id == booking.seeker_id %}
+      <a href="{{ url_for('bookings.detail', booking_id=booking.id) }}" class="btn btn-secondary">Back to booking</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
