@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Ride monitoring · ShareRide Admin{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Ride monitoring</h1>
+    <p class="page-sub">All rides on the platform with bookings and safety alerts.</p>
+  </div>
+  {{ button("Back to overview", style="secondary", href=url_for('admin.overview')) }}
+</div>
+
+<div class="tabs">
+  <a href="{{ url_for('admin.rides') }}" class="tab {% if not status %}tab-active{% endif %}">All</a>
+  {% for s in ["scheduled", "started", "completed", "cancelled"] %}
+    <a href="{{ url_for('admin.rides', status=s) }}" class="tab {% if status == s %}tab-active{% endif %}">
+      {{ s|capitalize }} <span class="tab-count">{{ counts[s] }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+<form method="GET" action="{{ url_for('admin.rides') }}" class="card filter-bar">
+  <input type="hidden" name="status" value="{{ status }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="Pickup or destination">
+  <input type="date" name="date" value="{{ date_text }}">
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or date_text %}
+    <a href="{{ url_for('admin.rides', status=status) }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  <h2 class="card-title">{{ ride_list|length }} ride{{ "" if ride_list|length == 1 else "s" }}</h2>
+  {% if ride_list %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Route</th>
+            <th>Provider</th>
+            <th>Seats</th>
+            <th>Bookings</th>
+            <th>Fare</th>
+            <th>SOS</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in ride_list %}
+            {% set active_bookings = r.bookings|selectattr("status", "in", ["pending", "accepted", "onboard", "completed"])|list %}
+            {% set open_sos = r.sos_alerts|selectattr("status", "equalto", "open")|list %}
+            <tr class="{% if open_sos %}row-alert{% endif %}">
+              <td>
+                {{ r.ride_date.strftime("%d %b %Y") }}
+                <span class="user-meta">{{ r.ride_time.strftime("%I:%M %p") }}</span>
+              </td>
+              <td><strong>{{ r.pickup }}</strong> → {{ r.destination }}</td>
+              <td>{{ r.provider.full_name }}</td>
+              <td>{{ r.booked_seats }} / {{ r.total_seats }}</td>
+              <td>{{ active_bookings|length }}</td>
+              <td>৳{{ r.fare_per_seat }}</td>
+              <td>
+                {% if open_sos %}
+                  <span class="pill pill-cancelled">🚨 {{ open_sos|length }} open</span>
+                {% elif r.sos_alerts %}
+                  <span class="user-meta">{{ r.sos_alerts|length }} resolved</span>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td><span class="pill pill-{{ r.status }}">{{ r.status|capitalize }}</span></td>
+              <td>
+                <a href="{{ url_for('rides.detail', ride_id=r.id) }}" class="btn btn-secondary btn-sm">View</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No rides match these filters.</p>
+  {% endif %}
+</div>
+{% endblock %}

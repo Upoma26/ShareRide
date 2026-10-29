@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Users · ShareRide Admin{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Users</h1>
+    <p class="page-sub">Search members and manage their accounts.</p>
+  </div>
+  {{ button("Back to overview", style="secondary", href=url_for('admin.overview')) }}
+</div>
+
+<form method="GET" action="{{ url_for('admin.users') }}" class="card filter-bar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Name, phone or email">
+  <select name="role">
+    <option value="">All roles</option>
+    <option value="seeker" {% if role == "seeker" %}selected{% endif %}>Seekers</option>
+    <option value="provider" {% if role == "provider" %}selected{% endif %}>Providers</option>
+  </select>
+  <select name="status">
+    <option value="">All accounts</option>
+    <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+    <option value="suspended" {% if status == "suspended" %}selected{% endif %}>Suspended</option>
+    <option value="blocked" {% if status == "blocked" %}selected{% endif %}>Blocked</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or role or status %}
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  <h2 class="card-title">{{ members|length }} member{{ "" if members|length == 1 else "s" }}</h2>
+  {% if members %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Phone</th>
+            <th>NID</th>
+            <th>Account</th>
+            <th>Trips</th>
+            <th>Rating</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+            <tr class="{% if m.account_status != 'active' %}row-muted{% endif %}">
+              <td>
+                <strong>{{ m.full_name }}</strong>
+                <span class="user-meta">{{ m.email }}</span>
+              </td>
+              <td>{{ m.role|capitalize }}</td>
+              <td>{{ m.phone }}</td>
+              <td><span class="pill pill-{{ m.verification_status }}">{{ m.verification_status|capitalize }}</span></td>
+              <td><span class="pill pill-account-{{ m.account_status }}">{{ m.account_status|capitalize }}</span></td>
+              <td>{{ m.total_trips or 0 }}</td>
+              <td>{% if m.rating %}★ {{ "%.1f"|format(m.rating) }}{% else %}-{% endif %}</td>
+              <td>{{ m.created_at.strftime("%d %b %Y") }}</td>
+              <td>
+                <a href="{{ url_for('admin.nid_review', user_id=m.id) }}" class="btn btn-secondary btn-sm">Manage</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No members match these filters.</p>
+  {% endif %}
+</div>
+{% endblock %}
