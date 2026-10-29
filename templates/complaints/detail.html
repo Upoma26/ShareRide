@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Complaint #{{ c.id }} · ShareRide{% endblock %}
+
+{% block content %}
+{% set order = ["open", "investigating", "resolved"] %}
+{% set labels = ["Submitted", "Under review", "Resolved"] %}
+{% set current = order.index(c.status) if c.status in order else -1 %}
+
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Complaint #{{ c.id }}</h1>
+    <p class="page-sub">{{ c.subject }}</p>
+  </div>
+  {{ button("My complaints", style="secondary", href=url_for('complaints.mine')) }}
+</div>
+
+{% if c.status == "dismissed" %}
+  <div class="alert alert-warning">This complaint was reviewed and closed without action.</div>
+{% else %}
+  <ol class="timeline">
+    {% for label in labels %}
+      <li class="timeline-step {% if loop.index0 < current or c.status == 'resolved' %}done{% elif loop.index0 == current %}current{% endif %}">
+        <span class="timeline-dot">{% if loop.index0 < current or c.status == "resolved" %}✓{% else %}{{ loop.index }}{% endif %}</span>
+        <span class="timeline-label">{{ label }}</span>
+      </li>
+    {% endfor %}
+  </ol>
+{% endif %}
+
+<div class="card">
+  <dl class="detail-list">
+    <dt>Category</dt><dd>{{ c.category_label }}</dd>
+    {% if c.against %}<dt>About</dt><dd>{{ c.against.full_name }}</dd>{% endif %}
+    {% if c.ride %}
+      <dt>Ride</dt>
+      <dd>{{ c.ride.pickup }} → {{ c.ride.destination }} · {{ c.ride.ride_date.strftime("%d %b %Y") }}</dd>
+    {% endif %}
+    <dt>Submitted</dt><dd>{{ c.created_at.strftime("%d %b %Y, %I:%M %p") }}</dd>
+    <dt>Status</dt><dd><span class="pill pill-complaint-{{ c.status }}">{{ c.status|capitalize }}</span></dd>
+  </dl>
+
+  <div class="ride-notes">
+    <strong>What you reported</strong>
+    <p>{{ c.description }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Response from ShareRide</h2>
+  {% if c.admin_note %}
+    <p>{{ c.admin_note }}</p>
+    <p class="user-meta">Updated {{ c.updated_at.strftime("%d %b %Y, %I:%M %p") }}</p>
+  {% else %}
+    <p class="empty-state">No response yet. We usually review complaints within 24 hours.</p>
+  {% endif %}
+</div>
+{% endblock %}

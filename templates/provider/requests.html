@@ -19,6 +19,7 @@
         <button type="submit" class="btn btn-primary">Complete trip</button>
       </form>
     {% endif %}
+    {{ button("Report a problem", style="secondary", href=url_for('complaints.new', ride_id=ride.id)) }}
     {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
   </div>
 </div>

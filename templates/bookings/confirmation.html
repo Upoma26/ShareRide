@@ -109,7 +109,10 @@
         {% endif %}
       {% endif %}
 
-      
+      {% if booking.status in ("accepted", "onboard", "completed") %}
+        <a href="{{ url_for('complaints.new', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Report a problem</a>
+      {% endif %}
+
       {% if can_show_pin %}
         <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=booking.id) }}" class="box-action">
           <button type="submit" class="btn btn-primary btn-block">Show my Trip PIN</button>

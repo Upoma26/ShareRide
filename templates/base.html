@@ -18,6 +18,9 @@
           {% if current_user.role == "seeker" %}
             <a href="{{ url_for('bookings.mine') }}">My bookings</a>
           {% endif %}
+          {% if current_user.role in ("seeker", "provider") %}
+            <a href="{{ url_for('complaints.mine') }}">Complaints</a>
+          {% endif %}
           <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
           <a href="{{ url_for('auth.logout') }}">Sign out</a>
         {% else %}

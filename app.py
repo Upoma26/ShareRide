@@ -31,6 +31,7 @@ def create_app():
     from models.sos import SosAlert  # noqa: F401
     from models.rating import Rating  # noqa: F401
     from models.audit import AuditLog  # noqa: F401
+    from models.complaint import Complaint  # noqa: F401
 
 
 
@@ -48,6 +49,8 @@ def create_app():
     app.register_blueprint(payments_bp)
     from routes.ratings import ratings_bp
     app.register_blueprint(ratings_bp)
+    from routes.complaints import complaints_bp
+    app.register_blueprint(complaints_bp)
     from routes.admin import admin_bp
     app.register_blueprint(admin_bp)
 
