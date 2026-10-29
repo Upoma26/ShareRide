@@ -92,6 +92,16 @@
         <a href="{{ url_for('rides.active', ride_id=ride.id) }}" class="btn btn-danger btn-block box-action">Open active ride & SOS</a>
       {% endif %}
 
+
+
+
+      {% if booking.payment %}
+        <a href="{{ url_for('payments.receipt', payment_id=booking.payment.id) }}" class="btn btn-secondary btn-block box-action">View receipt</a>
+      {% elif booking.status in ("onboard", "completed") %}
+        <a href="{{ url_for('payments.pay', booking_id=booking.id) }}" class="btn btn-primary btn-block box-action">Pay ৳{{ booking.total_fare }}</a>
+      {% endif %}
+
+      
       {% if can_show_pin %}
         <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=booking.id) }}" class="box-action">
           <button type="submit" class="btn btn-primary btn-block">Show my Trip PIN</button>

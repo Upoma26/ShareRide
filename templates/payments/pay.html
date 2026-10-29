@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Pay for your trip · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1 class="auth-title">Pay for your trip</h1>
+  <p class="auth-sub">
+    {{ booking.ride.pickup }} → {{ booking.ride.destination }} ·
+    {{ booking.seats }} seat{{ "" if booking.seats == 1 else "s" }}
+  </p>
+
+  <p class="price">৳{{ booking.total_fare }}</p>
+
+  <form method="POST" action="{{ url_for('payments.pay', booking_id=booking.id) }}">
+    <div class="form-group">
+      <label>Payment method</label>
+      <div class="role-choice">
+        {% for m in methods %}
+          <label class="role-option">
+            <input type="radio" name="method" value="{{ m }}" {% if loop.first %}checked{% endif %}>
+            <span>{{ "bKash" if m == "bkash" else m|capitalize }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="transaction_ref">Transaction ID (not needed for cash)</label>
+      <input type="text" id="transaction_ref" name="transaction_ref" maxlength="30" placeholder="e.g. 8N7A6B5C4D">
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Confirm payment</button>
+  </form>
+</div>
+{% endblock %}

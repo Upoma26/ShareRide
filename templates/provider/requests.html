@@ -82,6 +82,9 @@
           </div>
           <div class="table-actions">
             <span class="pill pill-booking-{{ b.status }}">{{ b.status|capitalize }}</span>
+            {% if b.payment %}
+              <a href="{{ url_for('payments.receipt', payment_id=b.payment.id) }}" class="btn btn-secondary btn-sm">Receipt</a>
+            {% endif %}
             {% if b.status == "accepted" and ride.status in ("scheduled", "started") %}
               <form method="POST" action="{{ url_for('provider.verify_pin', booking_id=b.id) }}" class="pin-form">
                 <input type="text" name="pin" inputmode="numeric" maxlength="4"
