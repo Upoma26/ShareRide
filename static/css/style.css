@@ -1328,3 +1328,55 @@ a.ride-card {
     flex-wrap: wrap;
   }
 }
+
+.pin-button {
+  margin-top: 10px;
+}
+
+.pin-card {
+  text-align: center;
+}
+
+.pin-display {
+  margin: 20px 0;
+  padding: 18px;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 18px;
+  font-family: "Courier New", monospace;
+  color: #13537C;
+  background: #E4EFF7;
+  border: 2px dashed #1C6EA4;
+  border-radius: 14px;
+}
+
+.pin-form {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
+.pin-form input {
+  width: 80px;
+  padding: 6px 10px;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 4px;
+  border: 1px solid #D4E1EB;
+  border-radius: 8px;
+}
+
+.pill-booking-onboard {
+  background: #E4EFF7;
+  color: #13537C;
+}
+
+.head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.head-actions form {
+  margin: 0;
+}

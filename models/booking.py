@@ -2,7 +2,7 @@ from datetime import datetime
 
 from extensions import db
 
-BOOKING_STATUSES = ("pending", "accepted", "rejected", "cancelled", "completed")
+BOOKING_STATUSES = ("pending", "accepted", "onboard", "rejected", "cancelled", "completed")
 
 
 class Booking(db.Model):

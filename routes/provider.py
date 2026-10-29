@@ -9,6 +9,7 @@ from models.ride import Ride
 from models.vehicle import Vehicle, VEHICLE_TYPES
 from utils.decorators import role_required
 from utils.seats import release_seats
+from utils.trip_pin import check_pin, clear_pin, MAX_PIN_ATTEMPTS
 
 provider_bp = Blueprint("provider", __name__, url_prefix="/provider")
 
@@ -251,6 +252,7 @@ def cancel_ride(ride_id):
         flash("Ride cancelled.", "warning")
     return redirect(url_for("provider.dashboard"))
 
+
 @provider_bp.route("/rides/<int:ride_id>/requests")
 @role_required("provider")
 def ride_requests(ride_id):
@@ -306,4 +308,45 @@ def decide_booking(booking_id):
     booking.decided_at = datetime.utcnow()
     db.session.commit()
     flash(message, category)
-    return back    
+    return back
+
+
+@provider_bp.route("/bookings/<int:booking_id>/verify-pin", methods=["POST"])
+@role_required("provider")
+def verify_pin(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    ride = booking.ride
+    if ride.provider_id != current_user.id:
+        abort(404)
+
+    back = redirect(url_for("provider.ride_requests", ride_id=ride.id))
+
+    if booking.status != "accepted" or ride.status not in ("scheduled", "started"):
+        flash("This passenger cannot be checked in.", "warning")
+        return back
+
+    pin = request.form.get("pin", "").strip()
+    if not (pin.isdigit() and len(pin) == 4):
+        flash("Please enter the 4-digit Trip PIN.", "danger")
+        return back
+
+    result = check_pin(booking, pin)
+
+    if result == "ok":
+        clear_pin(booking)
+        booking.status = "onboard"
+        if ride.status == "scheduled":
+            ride.status = "started"
+            ride.started_at = datetime.utcnow()
+        db.session.commit()
+        flash(f"PIN correct. {booking.seeker.full_name} is on board.", "success")
+        return back
+
+    db.session.commit()
+    messages = {
+        "missing": "The passenger has not opened their Trip PIN yet.",
+        "wrong": f"Wrong PIN. {MAX_PIN_ATTEMPTS - (booking.pin_attempts or 0)} attempt(s) left.",
+        "locked": "Too many wrong attempts. Ask the passenger to open a new Trip PIN.",
+    }
+    flash(messages[result], "danger")
+    return back

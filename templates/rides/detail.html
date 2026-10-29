@@ -109,6 +109,9 @@
           </p>
           {% if my_booking.status == "accepted" %}
             <p class="user-meta">Number plate: <strong>{{ ride.vehicle.plate_number }}</strong></p>
+            <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=my_booking.id) }}">
+              <button type="submit" class="btn btn-primary btn-block pin-button">Show my Trip PIN</button>
+            </form>
           {% endif %}
         </div>
         {% if ride.status == "scheduled" and not is_past %}
