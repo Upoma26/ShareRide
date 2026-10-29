@@ -6,6 +6,7 @@ from sqlalchemy import or_
 
 from extensions import db
 from models.booking import Booking
+from models.rating import Rating
 from models.ride import Ride
 from models.sos import SosAlert
 from models.user import User
@@ -137,6 +138,13 @@ def detail(ride_id):
     is_owner = current_user.is_authenticated and current_user.id == ride.provider_id
     is_past = datetime.combine(ride.ride_date, ride.ride_time) <= datetime.now()
 
+    reviews = (
+        Rating.query.filter_by(ratee_id=provider.id)
+        .order_by(Rating.created_at.desc())
+        .limit(3)
+        .all()
+    )
+
     my_booking = None
     if current_user.is_authenticated:
         my_booking = (
@@ -165,6 +173,7 @@ def detail(ride_id):
         is_past=is_past,
         can_book=can_book,
         my_booking=my_booking,
+        reviews=reviews,
     )
 
 

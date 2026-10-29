@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Rate your trip · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card rate-card">
+  <div class="avatar rate-avatar">{{ ratee.full_name[:1]|upper }}</div>
+  <h1 class="auth-title">
+    How was {{ "your driver" if role == "passenger" else "your passenger" }}?
+  </h1>
+  <p class="auth-sub">
+    {{ ratee.full_name }} · {{ ride.pickup }} → {{ ride.destination }} ·
+    {{ ride.ride_date.strftime("%d %b %Y") }}
+  </p>
+
+  <form method="POST" action="{{ url_for('ratings.rate', booking_id=booking.id) }}">
+    <div class="star-input">
+      {% for n in range(5, 0, -1) %}
+        <input type="radio" id="star{{ n }}" name="stars" value="{{ n }}" required>
+        <label for="star{{ n }}" title="{{ n }} star{{ '' if n == 1 else 's' }}">★</label>
+      {% endfor %}
+    </div>
+    <p class="star-text" id="starText">Tap a star</p>
+
+    <div class="form-group">
+      <label for="comment">Review (optional)</label>
+      <textarea id="comment" name="comment" rows="3" maxlength="300"
+                placeholder="e.g. Safe driving and on time"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Submit rating</button>
+  </form>
+
+  <a href="{{ back }}" class="back-link rate-skip">Maybe later</a>
+</div>
+
+<script>
+  (function () {
+    var words = { 1: "Very bad", 2: "Bad", 3: "Okay", 4: "Good", 5: "Excellent" };
+    var text = document.getElementById("starText");
+    document.querySelectorAll("input[name='stars']").forEach(function (r) {
+      r.addEventListener("change", function () {
+        text.textContent = this.value + " / 5 · " + words[this.value];
+      });
+    });
+  })();
+</script>
+{% endblock %}

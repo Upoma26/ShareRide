@@ -73,6 +73,17 @@
           </div>
 
           <p class="user-meta">Member since {{ provider.created_at.strftime("%B %Y") }}</p>
+          {% if reviews %}
+            <div class="review-list">
+              {% for r in reviews %}
+                <div class="review">
+                  <span class="stars">{% for i in range(1, 6) %}{{ "★" if i <= r.stars else "☆" }}{% endfor %}</span>
+                  <span class="user-meta">{{ r.rater.full_name }} · {{ r.created_at.strftime("%d %b %Y") }}</span>
+                  {% if r.comment %}<p>"{{ r.comment }}"</p>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>

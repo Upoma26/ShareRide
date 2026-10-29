@@ -29,6 +29,7 @@ def create_app():
     from models.booking import Booking  # noqa: F401
     from models.payment import Payment  # noqa: F401
     from models.sos import SosAlert  # noqa: F401
+    from models.rating import Rating  # noqa: F401
 
 
 
@@ -44,6 +45,8 @@ def create_app():
     app.register_blueprint(bookings_bp)
     from routes.payments import payments_bp
     app.register_blueprint(payments_bp)
+    from routes.ratings import ratings_bp
+    app.register_blueprint(ratings_bp)
     from routes.admin import admin_bp
     app.register_blueprint(admin_bp)
 
