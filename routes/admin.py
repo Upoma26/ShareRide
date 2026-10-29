@@ -12,10 +12,17 @@ from models.ride import Ride
 from models.nid import NidReview, NidAccessLog
 from models.sos import SosAlert
 from utils.decorators import role_required
+from utils.audit import log_action
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 NID_STATUSES = ("pending", "verified", "rejected")
+
+ACCOUNT_ACTIONS = {
+    "suspend": "suspended",
+    "block": "blocked",
+    "reinstate": "active",
+}
 
 
 def get_member_or_404(user_id):
@@ -140,6 +147,7 @@ def nid_decide(user_id):
         return redirect(url_for("admin.nid_review", user_id=user.id))
 
     user.verification_status = decision
+    log_action(f"nid_{decision}", "user", user.id, reason or None)
     db.session.add(NidReview(
         user_id=user.id,
         admin_id=current_user.id,
@@ -155,6 +163,42 @@ def nid_decide(user_id):
     return redirect(url_for("admin.nid_list"))
 
 
+@admin_bp.route("/users/<int:user_id>/status", methods=["POST"])
+@role_required("admin")
+def change_account_status(user_id):
+    user = get_member_or_404(user_id)
+    action = request.form.get("action", "")
+    reason = request.form.get("reason", "").strip()
+    back = redirect(url_for("admin.nid_review", user_id=user.id))
+
+    if action not in ACCOUNT_ACTIONS:
+        flash("Please choose a valid action.", "danger")
+        return back
+
+    new_status = ACCOUNT_ACTIONS[action]
+    if user.account_status == new_status:
+        flash(f"This account is already {new_status}.", "warning")
+        return back
+
+    if action != "reinstate" and len(reason) < 5:
+        flash("Please write a reason (at least 5 characters).", "danger")
+        return back
+
+    old_status = user.account_status
+    user.account_status = new_status
+    details = f"{old_status} -> {new_status}"
+    if reason:
+        details += f": {reason}"
+    log_action(f"account_{action}", "user", user.id, details)
+    db.session.commit()
+
+    if action == "reinstate":
+        flash(f"{user.full_name}'s account is active again.", "success")
+    else:
+        flash(f"{user.full_name}'s account has been {new_status}.", "warning")
+    return back
+
+
 @admin_bp.route("/sos/<int:alert_id>/resolve", methods=["POST"])
 @role_required("admin")
 def resolve_sos(alert_id):
@@ -163,6 +207,7 @@ def resolve_sos(alert_id):
         alert.status = "resolved"
         alert.resolved_at = datetime.utcnow()
         alert.resolved_by = current_user.id
+        log_action("sos_resolved", "sos", alert.id, f"Ride {alert.ride_id}")
         db.session.commit()
         flash("SOS alert marked as resolved.", "success")
     return redirect(url_for("admin.overview"))
