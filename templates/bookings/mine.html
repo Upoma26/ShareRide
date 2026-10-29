@@ -58,6 +58,7 @@
 {% else %}
   <div class="card empty-state">
     <p>You have no upcoming trips.</p>
+    {{ button("Trip history", style="secondary", href=url_for('bookings.history')) }}
     {{ button("Search for a ride", href=url_for('rides.search')) }}
   </div>
 {% endif %}

@@ -1645,3 +1645,44 @@ a.ride-card {
     margin: 0;
   }
 }
+
+.pay-breakdown {
+  margin: 8px 0 20px;
+}
+
+.method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.method-option {
+  padding: 14px;
+  font-weight: 600;
+  border-width: 2px;
+}
+
+.method-cash:has(input:checked) {
+  border-color: #1E5B35;
+  background: #E3F1E8;
+}
+
+.method-bkash:has(input:checked) {
+  border-color: #D12053;
+  background: #FCE8EF;
+}
+
+.method-nagad:has(input:checked) {
+  border-color: #E8641B;
+  background: #FDEEE4;
+}
+
+.method-card:has(input:checked) {
+  border-color: #1C6EA4;
+  background: #E4EFF7;
+}
+
+.method-help {
+  margin: 4px 0 14px;
+  font-size: 14px;
+}

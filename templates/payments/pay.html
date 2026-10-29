@@ -12,12 +12,18 @@
 
   <p class="price">৳{{ booking.total_fare }}</p>
 
+  <table class="receipt-table pay-breakdown">
+    <tr><td>Fare per seat</td><td>৳{{ booking.ride.fare_per_seat }}</td></tr>
+    <tr><td>Seats</td><td>× {{ booking.seats }}</td></tr>
+    <tr class="receipt-total"><td>To pay</td><td>৳{{ booking.total_fare }}</td></tr>
+  </table>
+
   <form method="POST" action="{{ url_for('payments.pay', booking_id=booking.id) }}">
     <div class="form-group">
       <label>Payment method</label>
-      <div class="role-choice">
+      <div class="role-choice method-grid">
         {% for m in methods %}
-          <label class="role-option">
+          <label class="role-option method-option method-{{ m }}">
             <input type="radio" name="method" value="{{ m }}" {% if loop.first %}checked{% endif %}>
             <span>{{ "bKash" if m == "bkash" else m|capitalize }}</span>
           </label>
@@ -26,11 +32,43 @@
     </div>
 
     <div class="form-group">
-      <label for="transaction_ref">Transaction ID (not needed for cash)</label>
+      <label for="transaction_ref">Transaction ID</label>
       <input type="text" id="transaction_ref" name="transaction_ref" maxlength="30" placeholder="e.g. 8N7A6B5C4D">
     </div>
+
+    <div class="alert alert-success method-help" id="methodHelp"></div>
 
     <button type="submit" class="btn btn-primary btn-block">Confirm payment</button>
   </form>
 </div>
+
+<script>
+  (function () {
+    var driverPhone = "{{ booking.ride.provider.phone }}";
+    var amount = "৳{{ booking.total_fare }}";
+    var help = {
+      cash: "Pay " + amount + " in cash to the driver, then press Confirm.",
+      bkash: "Send " + amount + " to the driver's bKash " + driverPhone + " using Send Money, then type the TrxID from the SMS.",
+      nagad: "Send " + amount + " to the driver's Nagad " + driverPhone + ", then type the transaction ID from the SMS.",
+      card: "Pay " + amount + " by card at the driver's POS, then type the approval code from the slip."
+    };
+
+    var radios = document.querySelectorAll("input[name='method']");
+    var txnInput = document.getElementById("transaction_ref");
+    var txnGroup = txnInput.closest(".form-group");
+    var helpBox = document.getElementById("methodHelp");
+
+    function update() {
+      var chosen = document.querySelector("input[name='method']:checked").value;
+      helpBox.textContent = help[chosen];
+      var isCash = chosen === "cash";
+      txnGroup.style.display = isCash ? "none" : "block";
+      txnInput.required = !isCash;
+      if (isCash) { txnInput.value = ""; }
+    }
+
+    radios.forEach(function (r) { r.addEventListener("change", update); });
+    update();
+  })();
+</script>
 {% endblock %}
