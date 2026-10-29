@@ -26,6 +26,8 @@
       <dt>Email</dt><dd>{{ user.email }}</dd>
       <dt>NID number</dt><dd>{{ user.nid_number }}</dd>
       <dt>Phone verified</dt><dd>{{ "Yes" if user.phone_verified else "No" }}</dd>
+      <dt>Account</dt>
+      <dd><span class="pill pill-account-{{ user.account_status }}">{{ user.account_status|capitalize }}</span></dd>
       <dt>NID status</dt>
       <dd><span class="pill pill-{{ user.verification_status }}">{{ user.verification_status|capitalize }}</span></dd>
     </dl>
@@ -47,6 +49,50 @@
     </form>
   </div>
 </div>
+
+<div class="card account-actions">
+  <h2 class="card-title">Account actions</h2>
+  <p class="card-sub">
+    Suspend for a temporary hold while you investigate. Block for serious violations.
+    The member is signed out and cannot sign in until reinstated.
+  </p>
+  <form method="POST" action="{{ url_for('admin.change_account_status', user_id=user.id) }}" id="accountForm">
+    <div class="form-group" id="accountReasonGroup">
+      <label for="account_reason">Reason (required for suspend or block)</label>
+      <textarea id="account_reason" name="reason" rows="2" maxlength="300"
+                placeholder="e.g. Several passengers reported unsafe driving"></textarea>
+      <small class="error-msg">Please write at least 5 characters.</small>
+    </div>
+    <div class="decision-buttons">
+      {% if user.account_status != "active" %}
+        <button type="submit" name="action" value="reinstate" class="btn btn-primary">Reinstate</button>
+      {% endif %}
+      {% if user.account_status != "suspended" %}
+        <button type="submit" name="action" value="suspend" class="btn btn-secondary">Suspend</button>
+      {% endif %}
+      {% if user.account_status != "blocked" %}
+        <button type="submit" name="action" value="block" class="btn btn-danger">Block</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<script>
+  document.getElementById("accountForm").addEventListener("submit", function (e) {
+    var action = e.submitter ? e.submitter.value : "";
+    var reason = document.getElementById("account_reason").value.trim();
+    var group = document.getElementById("accountReasonGroup");
+    if (action !== "reinstate" && reason.length < 5) {
+      group.classList.add("has-error");
+      e.preventDefault();
+      return;
+    }
+    group.classList.remove("has-error");
+    if (!confirm("Are you sure you want to " + action + " this account?")) {
+      e.preventDefault();
+    }
+  });
+</script>
 
 <div class="card">
   <h2 class="card-title">NID documents</h2>

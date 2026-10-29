@@ -30,6 +30,7 @@ def create_app():
     from models.payment import Payment  # noqa: F401
     from models.sos import SosAlert  # noqa: F401
     from models.rating import Rating  # noqa: F401
+    from models.audit import AuditLog  # noqa: F401
 
 
 
@@ -54,6 +55,13 @@ def create_app():
     def check_session_timeout():
         if not current_user.is_authenticated:
             return None
+
+        if not current_user.is_active_account:
+            status = current_user.account_status
+            logout_user()
+            session.pop("last_seen", None)
+            flash(f"Your account is {status}. Please contact support.", "danger")
+            return redirect(url_for("auth.login"))
 
         if current_user.role == "admin":
             limit = ADMIN_TIMEOUT_MINUTES * 60

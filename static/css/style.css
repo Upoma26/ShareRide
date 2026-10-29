@@ -1753,3 +1753,22 @@ a.ride-card {
   font-size: 14px;
   color: #0F2434;
 }
+
+.account-actions {
+  border-left: 4px solid #8E2323;
+}
+
+.pill-account-active {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+.pill-account-suspended {
+  background: #F7EADA;
+  color: #7A4A0C;
+}
+
+.pill-account-blocked {
+  background: #F7E8E5;
+  color: #8E2323;
+}
