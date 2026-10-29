@@ -11,6 +11,31 @@
   </div>
   {{ button("Review NIDs (" ~ stats.pending_nid ~ ")", href=url_for('admin.nid_list')) }}
 </div>
+{% if open_sos %}
+  <div class="sos-admin">
+    <h2 class="card-title">🚨 Open SOS alerts ({{ open_sos|length }})</h2>
+    <ul class="user-list">
+      {% for a in open_sos %}
+        <li>
+          <div>
+            <strong>{{ a.user.full_name }}</strong> · {{ a.user.phone }}
+            <span class="user-meta">
+              {{ a.ride.pickup }} → {{ a.ride.destination }} · driver {{ a.ride.provider.full_name }}
+              · {{ a.created_at.strftime("%d %b, %I:%M %p") }}
+              {% if a.latitude and a.longitude %}
+                · <a href="https://maps.google.com/?q={{ a.latitude }},{{ a.longitude }}" target="_blank" rel="noopener">Open location</a>
+              {% endif %}
+              {% if a.message %} · "{{ a.message }}"{% endif %}
+            </span>
+          </div>
+          <form method="POST" action="{{ url_for('admin.resolve_sos', alert_id=a.id) }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Resolve</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
 
 <h2 class="section-title">Users</h2>
 <div class="stat-grid">

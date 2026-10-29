@@ -88,6 +88,9 @@
         <dt>Status</dt><dd><span class="pill pill-booking-{{ booking.status }}">{{ booking.status|capitalize }}</span></dd>
         <dt>Booked</dt><dd>{{ booking.created_at.strftime("%d %b, %I:%M %p") }}</dd>
       </dl>
+      {% if booking.status == "onboard" and ride.status == "started" %}
+        <a href="{{ url_for('rides.active', ride_id=ride.id) }}" class="btn btn-danger btn-block box-action">Open active ride & SOS</a>
+      {% endif %}
 
       {% if can_show_pin %}
         <form method="POST" action="{{ url_for('bookings.reveal_pin', booking_id=booking.id) }}" class="box-action">
