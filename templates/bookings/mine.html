@@ -29,7 +29,7 @@
       <span class="pill pill-booking-{{ b.status }}">
         {% if b.status == "pending" %}Waiting for driver{% else %}{{ b.status|capitalize }}{% endif %}
       </span>
-      <a href="{{ url_for('rides.detail', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">View ride</a>
+      <a href="{{ url_for('bookings.detail', booking_id=b.id) }}" class="btn btn-secondary btn-sm">Details</a>
       {% if show_cancel and b.is_active and ride.status == "scheduled" %}
         <form method="POST" action="{{ url_for('bookings.cancel', booking_id=b.id) }}"
               onsubmit="return confirm('Cancel this booking? Your seats will be released.');">

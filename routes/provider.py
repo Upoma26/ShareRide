@@ -311,6 +311,27 @@ def decide_booking(booking_id):
     return back
 
 
+@provider_bp.route("/rides/<int:ride_id>/start")
+@role_required("provider")
+def start_trip(ride_id):
+    ride = get_own_ride_or_404(ride_id)
+
+    if ride.status not in ("scheduled", "started"):
+        flash("This trip is already finished.", "warning")
+        return redirect(url_for("provider.dashboard"))
+
+    waiting = [b for b in ride.bookings if b.status == "accepted"]
+    onboard = [b for b in ride.bookings if b.status == "onboard"]
+
+    return render_template(
+        "provider/start_trip.html",
+        ride=ride,
+        waiting=waiting,
+        onboard=onboard,
+        max_attempts=MAX_PIN_ATTEMPTS,
+    )
+
+
 @provider_bp.route("/bookings/<int:booking_id>/verify-pin", methods=["POST"])
 @role_required("provider")
 def verify_pin(booking_id):
@@ -319,7 +340,7 @@ def verify_pin(booking_id):
     if ride.provider_id != current_user.id:
         abort(404)
 
-    back = redirect(url_for("provider.ride_requests", ride_id=ride.id))
+    back = redirect(url_for("provider.start_trip", ride_id=ride.id))
 
     if booking.status != "accepted" or ride.status not in ("scheduled", "started"):
         flash("This passenger cannot be checked in.", "warning")
@@ -350,3 +371,33 @@ def verify_pin(booking_id):
     }
     flash(messages[result], "danger")
     return back
+
+
+@provider_bp.route("/rides/<int:ride_id>/complete", methods=["POST"])
+@role_required("provider")
+def complete_trip(ride_id):
+    ride = get_own_ride_or_404(ride_id)
+
+    if ride.status != "started":
+        flash("Only a started trip can be completed.", "warning")
+        return redirect(url_for("provider.start_trip", ride_id=ride.id))
+
+    now = datetime.utcnow()
+    passengers = 0
+    for booking in ride.bookings:
+        if booking.status == "onboard":
+            booking.status = "completed"
+            booking.seeker.total_trips = (booking.seeker.total_trips or 0) + 1
+            passengers += 1
+        elif booking.status in ("pending", "accepted"):
+            booking.status = "cancelled"
+            booking.cancelled_at = now
+        clear_pin(booking)
+
+    ride.status = "completed"
+    ride.completed_at = now
+    current_user.total_trips = (current_user.total_trips or 0) + 1
+    db.session.commit()
+
+    flash(f"Trip completed with {passengers} passenger(s).", "success")
+    return redirect(url_for("provider.dashboard"))

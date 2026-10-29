@@ -46,7 +46,7 @@ def mine():
     for booking in bookings:
         ride = booking.ride
         still_ahead = ride.status == "started" or not ride_has_left(ride)
-        if booking.is_active and ride.status in ("scheduled", "started") and still_ahead:
+        if booking.status in ("pending", "accepted", "onboard") and ride.status in ("scheduled", "started") and still_ahead:
             upcoming.append(booking)
         else:
             past.append(booking)
@@ -102,7 +102,27 @@ def create(ride_id):
     db.session.commit()
 
     flash("Booking request sent. The driver will accept or reject it soon.", "success")
-    return back
+    return redirect(url_for("bookings.detail", booking_id=booking.id))
+
+
+@bookings_bp.route("/<int:booking_id>")
+@role_required("seeker")
+def detail(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    if booking.seeker_id != current_user.id:
+        abort(404)
+
+    ride = booking.ride
+    can_cancel = booking.is_active and ride.status == "scheduled" and not ride_has_left(ride)
+    can_show_pin = booking.status == "accepted" and ride.status in ("scheduled", "started")
+
+    return render_template(
+        "bookings/confirmation.html",
+        booking=booking,
+        ride=ride,
+        can_cancel=can_cancel,
+        can_show_pin=can_show_pin,
+    )
 
 
 @bookings_bp.route("/<int:booking_id>/pin", methods=["POST"])
@@ -114,7 +134,7 @@ def reveal_pin(booking_id):
 
     if booking.status != "accepted" or booking.ride.status not in ("scheduled", "started"):
         flash("A Trip PIN is only available for accepted bookings.", "warning")
-        return redirect(url_for("rides.detail", ride_id=booking.ride_id))
+        return redirect(url_for("bookings.detail", booking_id=booking.id))
 
     pin = issue_pin(booking)
     db.session.commit()
