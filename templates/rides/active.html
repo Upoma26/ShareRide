@@ -65,6 +65,7 @@
       </form>
 
       <a href="tel:999" class="btn btn-secondary btn-block box-action">Call 999</a>
+      <a href="{{ url_for('complaints.new', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Report a problem</a>
 
       {% if my_alerts %}
         <p class="user-meta box-action">

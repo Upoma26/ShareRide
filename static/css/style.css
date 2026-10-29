@@ -1808,3 +1808,34 @@ a.ride-card {
 .row-alert td {
   background: #FDF3F1;
 }
+
+.pill-complaint-open {
+  background: #F7EADA;
+  color: #7A4A0C;
+}
+
+.pill-complaint-investigating {
+  background: #E4EFF7;
+  color: #13537C;
+}
+
+.pill-complaint-resolved {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+.pill-complaint-dismissed {
+  background: #EDF2F6;
+  color: #51697C;
+}
+
+.complaint-link {
+  font-weight: 600;
+  color: #0F2434;
+  text-decoration: none;
+}
+
+.complaint-link:hover {
+  color: #1C6EA4;
+  text-decoration: underline;
+}

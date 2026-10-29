@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}My complaints · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">My complaints</h1>
+    <p class="page-sub">Track the problems you reported.</p>
+  </div>
+  {{ button("Report a problem", href=url_for('complaints.new')) }}
+</div>
+
+<div class="card">
+  {% if complaints %}
+    <ul class="user-list">
+      {% for c in complaints %}
+        <li>
+          <div>
+            <a href="{{ url_for('complaints.detail', complaint_id=c.id) }}" class="complaint-link">
+              #{{ c.id }} · {{ c.subject }}
+            </a>
+            <span class="user-meta">
+              {{ c.category_label }}
+              {% if c.against %} · about {{ c.against.full_name }}{% endif %}
+              · {{ c.created_at.strftime("%d %b %Y") }}
+            </span>
+          </div>
+          <span class="pill pill-complaint-{{ c.status }}">{{ c.status|capitalize }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty-state">You have not reported any problems. We hope it stays that way!</p>
+  {% endif %}
+</div>
+{% endblock %}

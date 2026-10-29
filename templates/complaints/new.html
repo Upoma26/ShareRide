@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Report a problem · ShareRide{% endblock %}
+
+{% block content %}
+{% set f = request.form %}
+<div class="form-page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Report a problem</h1>
+      <p class="page-sub">
+        {% if ride %}
+          About your ride {{ ride.pickup }} → {{ ride.destination }} on {{ ride.ride_date.strftime("%d %b %Y") }}
+        {% else %}
+          Tell us about any problem with ShareRide.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="alert alert-danger">
+    If you are in danger right now, call <strong>999</strong> first.
+  </div>
+
+  <form method="POST" action="{{ url_for('complaints.new') }}" class="card" id="complaintForm" novalidate>
+    {% if ride %}
+      <input type="hidden" name="ride_id" value="{{ ride.id }}">
+
+      <div class="form-group">
+        <label for="against_id">Who is this about?</label>
+        <select id="against_id" name="against_id">
+          {% if role == "driver" %}
+            <option value="">The ride in general</option>
+          {% endif %}
+          {% for p in people %}
+            <option value="{{ p.id }}" {% if f.get('against_id') == p.id|string %}selected{% endif %}>
+              {{ p.full_name }} ({{ "driver" if p.id == ride.provider_id else "passenger" }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label for="category">What is the problem about?</label>
+      <select id="category" name="category" required>
+        <option value="">Choose one</option>
+        {% for key, label in categories.items() %}
+          <option value="{{ key }}" {% if f.get('category') == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <small class="error-msg">Please choose a category.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="subject">Subject</label>
+      <input type="text" id="subject" name="subject" minlength="5" maxlength="120"
+             value="{{ f.get('subject', '') }}" placeholder="e.g. Driver was driving too fast" required>
+      <small class="error-msg">Subject must be 5 to 120 characters.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="description">What happened?</label>
+      <textarea id="description" name="description" rows="6" minlength="20" maxlength="2000"
+                placeholder="Please describe what happened, when and where." required>{{ f.get('description', '') }}</textarea>
+      <small class="hint"><span id="charCount">0</span> / 2000 characters (at least 20)</small>
+      <small class="error-msg">Please write at least 20 characters.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Submit complaint</button>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById("complaintForm");
+    var desc = document.getElementById("description");
+    var count = document.getElementById("charCount");
+
+    function updateCount() { count.textContent = desc.value.length; }
+    desc.addEventListener("input", updateCount);
+    updateCount();
+
+    form.addEventListener("submit", function (e) {
+      var ok = true;
+      form.querySelectorAll("input[required], select[required], textarea[required]").forEach(function (field) {
+        var group = field.closest(".form-group");
+        if (!field.checkValidity()) {
+          group.classList.add("has-error");
+          ok = false;
+        } else {
+          group.classList.remove("has-error");
+        }
+      });
+      if (!ok) { e.preventDefault(); }
+    });
+  })();
+</script>
+{% endblock %}
