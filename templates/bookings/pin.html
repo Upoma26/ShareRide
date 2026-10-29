@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Your Trip PIN · ShareRide{% endblock %}
+
+{% block content %}
+<div class="auth-card pin-card">
+  <h1 class="auth-title">Your Trip PIN</h1>
+  <p class="auth-sub">
+    {{ booking.ride.pickup }} → {{ booking.ride.destination }} ·
+    {{ booking.ride.ride_date.strftime("%d %b") }}, {{ booking.ride.ride_time.strftime("%I:%M %p") }}
+  </p>
+
+  <div class="pin-display">{{ pin }}</div>
+
+  <div class="alert alert-warning">
+    Tell this PIN to the driver only after you get in the car.
+    It is stored in a secure hashed form, so it cannot be shown again.
+    If you forget it, open a new one and the old PIN will stop working.
+  </div>
+
+  {{ button("Back to ride", style="secondary", href=url_for('rides.detail', ride_id=booking.ride_id), block=True) }}
+</div>
+{% endblock %}

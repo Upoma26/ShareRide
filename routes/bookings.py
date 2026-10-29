@@ -8,6 +8,7 @@ from models.booking import Booking
 from models.ride import Ride
 from utils.decorators import role_required
 from utils.seats import reserve_seats, release_seats
+from utils.trip_pin import issue_pin
 
 bookings_bp = Blueprint("bookings", __name__, url_prefix="/bookings")
 
@@ -102,6 +103,22 @@ def create(ride_id):
 
     flash("Booking request sent. The driver will accept or reject it soon.", "success")
     return back
+
+
+@bookings_bp.route("/<int:booking_id>/pin", methods=["POST"])
+@role_required("seeker")
+def reveal_pin(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    if booking.seeker_id != current_user.id:
+        abort(404)
+
+    if booking.status != "accepted" or booking.ride.status not in ("scheduled", "started"):
+        flash("A Trip PIN is only available for accepted bookings.", "warning")
+        return redirect(url_for("rides.detail", ride_id=booking.ride_id))
+
+    pin = issue_pin(booking)
+    db.session.commit()
+    return render_template("bookings/pin.html", booking=booking, pin=pin)
 
 
 @bookings_bp.route("/<int:booking_id>/cancel", methods=["POST"])

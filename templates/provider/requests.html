@@ -12,7 +12,15 @@
       {{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }}
     </p>
   </div>
-  {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+  <div class="head-actions">
+    {% if ride.status == "started" %}
+      <form method="POST" action="{{ url_for('provider.complete_trip', ride_id=ride.id) }}"
+            onsubmit="return confirm('Mark this trip as completed?');">
+        <button type="submit" class="btn btn-primary">Complete trip</button>
+      </form>
+    {% endif %}
+    {{ button("Back to dashboard", style="secondary", href=url_for('provider.dashboard')) }}
+  </div>
 </div>
 
 <div class="stat-grid">
@@ -59,7 +67,7 @@
 </div>
 
 <div class="card">
-  <h2 class="card-title">Handled requests</h2>
+  <h2 class="card-title">Passengers and handled requests</h2>
 
   {% if handled %}
     <ul class="user-list">
@@ -69,10 +77,19 @@
             <strong>{{ b.seeker.full_name }}</strong>
             <span class="user-meta">
               {{ b.seats }} seat{{ "" if b.seats == 1 else "s" }} · ৳{{ b.total_fare }}
-              {% if b.status == "accepted" %} · phone {{ b.seeker.phone }}{% endif %}
+              {% if b.status in ("accepted", "onboard") %} · phone {{ b.seeker.phone }}{% endif %}
             </span>
           </div>
-          <span class="pill pill-booking-{{ b.status }}">{{ b.status|capitalize }}</span>
+          <div class="table-actions">
+            <span class="pill pill-booking-{{ b.status }}">{{ b.status|capitalize }}</span>
+            {% if b.status == "accepted" and ride.status in ("scheduled", "started") %}
+              <form method="POST" action="{{ url_for('provider.verify_pin', booking_id=b.id) }}" class="pin-form">
+                <input type="text" name="pin" inputmode="numeric" maxlength="4"
+                       pattern="[0-9]{4}" placeholder="PIN" autocomplete="off" required>
+                <button type="submit" class="btn btn-primary btn-sm">Check in</button>
+              </form>
+            {% endif %}
+          </div>
         </li>
       {% endfor %}
     </ul>
@@ -80,4 +97,4 @@
     <p class="empty-state">Nothing here yet.</p>
   {% endif %}
 </div>
-{% endblock %}qa
+{% endblock %}
