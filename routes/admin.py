@@ -12,6 +12,7 @@ from models.user import User
 from models.ride import Ride, RIDE_STATUSES
 from models.nid import NidReview, NidAccessLog
 from models.sos import SosAlert
+from models.complaint import Complaint, COMPLAINT_CATEGORIES, COMPLAINT_STATUSES
 from utils.decorators import role_required
 from utils.audit import log_action
 
@@ -24,6 +25,20 @@ ACCOUNT_ACTIONS = {
     "block": "blocked",
     "reinstate": "active",
 }
+
+COMPLAINT_ACTIONS = {
+    "none": "No action needed",
+    "warned": "Warning given",
+    "suspended": "Account suspended",
+    "blocked": "Account blocked",
+}
+
+COMPLAINT_ACCOUNT_ACTIONS = {
+    "suspended": "suspend",
+    "blocked": "block",
+}
+
+OPEN_COMPLAINT_STATUSES = ("open", "investigating")
 
 
 def get_member_or_404(user_id):
@@ -47,6 +62,7 @@ def overview():
         "total_rides": Ride.query.count(),
         "active_rides": Ride.query.filter(Ride.status.in_(["scheduled", "started"])).count(),
         "completed_rides": Ride.query.filter_by(status="completed").count(),
+        "open_complaints": Complaint.query.filter(Complaint.status.in_(OPEN_COMPLAINT_STATUSES)).count(),
     }
 
     pending_users = (
@@ -137,6 +153,130 @@ def rides():
         date_text=date_text,
         q=q,
     )
+
+
+@admin_bp.route("/complaints")
+@role_required("admin")
+def complaints():
+    status = request.args.get("status", "open")
+    category = request.args.get("category", "")
+    q = request.args.get("q", "").strip()[:100]
+
+    query = Complaint.query
+
+    if status in COMPLAINT_STATUSES:
+        query = query.filter(Complaint.status == status)
+    else:
+        status = ""
+
+    if category in COMPLAINT_CATEGORIES:
+        query = query.filter(Complaint.category == category)
+    else:
+        category = ""
+
+    if q:
+        query = query.filter(Complaint.subject.ilike(f"%{q}%"))
+
+    complaint_list = query.order_by(Complaint.created_at.desc()).limit(200).all()
+    counts = {s: Complaint.query.filter_by(status=s).count() for s in COMPLAINT_STATUSES}
+
+    return render_template(
+        "admin/complaints.html",
+        complaint_list=complaint_list,
+        counts=counts,
+        status=status,
+        category=category,
+        q=q,
+        categories=COMPLAINT_CATEGORIES,
+    )
+
+
+@admin_bp.route("/complaints/<int:complaint_id>")
+@role_required("admin")
+def complaint_detail(complaint_id):
+    c = db.get_or_404(Complaint, complaint_id)
+
+    other_complaints = []
+    if c.against_id:
+        other_complaints = (
+            Complaint.query.filter(
+                Complaint.against_id == c.against_id,
+                Complaint.id != c.id,
+            )
+            .order_by(Complaint.created_at.desc())
+            .limit(10)
+            .all()
+        )
+
+    return render_template(
+        "admin/complaint_detail.html",
+        c=c,
+        other_complaints=other_complaints,
+        actions=COMPLAINT_ACTIONS,
+    )
+
+
+@admin_bp.route("/complaints/<int:complaint_id>/handle", methods=["POST"])
+@role_required("admin")
+def handle_complaint(complaint_id):
+    c = db.get_or_404(Complaint, complaint_id)
+    back = redirect(url_for("admin.complaint_detail", complaint_id=c.id))
+
+    if not c.is_open:
+        flash("This complaint is already closed.", "warning")
+        return back
+
+    new_status = request.form.get("status", "")
+    action = request.form.get("action", "none")
+    note = request.form.get("admin_note", "").strip()[:500]
+
+    errors = []
+    if new_status not in ("investigating", "resolved", "dismissed"):
+        errors.append("Please choose a valid status.")
+    if action not in COMPLAINT_ACTIONS:
+        errors.append("Please choose a valid action.")
+    if new_status in ("resolved", "dismissed") and len(note) < 5:
+        errors.append("Please write a reply to the user (at least 5 characters).")
+    if action != "none":
+        if new_status != "resolved":
+            errors.append("An action can only be taken when resolving a complaint.")
+        if c.against is None or c.against.role == "admin":
+            errors.append("This complaint is not about a specific user, so no action can be taken.")
+
+    if errors:
+        for error in errors:
+            flash(error, "danger")
+        return back
+
+    c.status = new_status
+    c.handled_by = current_user.id
+    if note:
+        c.admin_note = note
+    if new_status in ("resolved", "dismissed"):
+        c.action_taken = action
+        c.resolved_at = datetime.utcnow()
+
+    if action in COMPLAINT_ACCOUNT_ACTIONS:
+        target = c.against
+        new_account_status = ACCOUNT_ACTIONS[COMPLAINT_ACCOUNT_ACTIONS[action]]
+        if target.account_status != new_account_status:
+            old_account_status = target.account_status
+            target.account_status = new_account_status
+            log_action(
+                f"account_{COMPLAINT_ACCOUNT_ACTIONS[action]}",
+                "user",
+                target.id,
+                f"{old_account_status} -> {new_account_status}: complaint #{c.id}",
+            )
+
+    details = f"action: {action}"
+    if note:
+        details += f" | {note}"
+    log_action(f"complaint_{new_status}", "complaint", c.id, details)
+    db.session.commit()
+
+    flash(f"Complaint #{c.id} marked as {new_status}.", "success")
+    return back
 
 
 @admin_bp.route("/nid")
