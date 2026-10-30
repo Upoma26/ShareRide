@@ -110,6 +110,7 @@
       {% endif %}
 
       {% if booking.status in ("accepted", "onboard", "completed") %}
+        <a href="{{ url_for('chat.room', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Open ride chat</a>
         <a href="{{ url_for('complaints.new', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Report a problem</a>
       {% endif %}
 
