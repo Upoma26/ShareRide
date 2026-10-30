@@ -15,42 +15,161 @@
   {{ button("Back to ride", style="secondary", href=url_for('rides.detail', ride_id=ride.id)) }}
 </div>
 
-<div class="card">
-  <p class="user-meta">
-    Members:
-    {% for m in members %}{{ m.full_name }}{% if m.id == ride.provider_id %} (driver){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
-  </p>
-  {% if closes_at and chat_open %}
-    <p class="user-meta">This chat closes on {{ closes_at.strftime("%d %b, %I:%M %p") }} (UTC).</p>
-  {% endif %}
-</div>
-
-<div class="card section-gap">
-  {% if messages %}
-    {% for m in messages %}
-      <p {% if loop.last %}id="latest"{% endif %}>
-        <strong>{{ m.sender.full_name }}{% if m.sender_id == ride.provider_id %} (driver){% endif %}</strong>
-        <span class="user-meta">{{ m.created_at.strftime("%d %b, %I:%M %p") }}</span><br>
-        {{ m.body }}
-      </p>
-    {% endfor %}
-  {% else %}
-    <p class="empty-state">No messages yet. Say hello to your ride group!</p>
-  {% endif %}
-</div>
-
-{% if can_send %}
-  <form method="post" class="card section-gap">
-    <div class="form-group">
-      <label for="body">Message</label>
-      <textarea id="body" name="body" rows="2" maxlength="{{ max_length }}" required
-                placeholder="e.g. I am waiting at the pickup point"></textarea>
+<div class="chat-layout">
+  <section class="card chat-box">
+    <div id="chatStatus" class="chat-status {{ 'chat-status-open' if chat_open else 'chat-status-closed' }}">
+      {% if chat_open %}
+        {% if closes_at %}
+          Chat open until {{ closes_at.strftime("%d %b, %I:%M %p") }} (UTC)
+        {% else %}
+          Chat is open for everyone on this ride
+        {% endif %}
+      {% else %}
+        {{ closed_reason }}
+      {% endif %}
     </div>
-    {{ button("Send") }}
-  </form>
-{% elif closed_reason %}
-  <div class="card section-gap"><p class="user-meta">{{ closed_reason }}</p></div>
-{% elif role == "admin" %}
-  <div class="card section-gap"><p class="user-meta">You are viewing this chat as an admin (read only).</p></div>
-{% endif %}
+
+    <div id="chatMessages" class="chat-messages"
+         data-poll-url="{{ url_for('chat.poll', ride_id=ride.id) }}"
+         data-last-id="{{ messages[-1].id if messages else 0 }}"
+         data-open="{{ 'yes' if chat_open else 'no' }}">
+      {% for m in messages %}
+        <div class="chat-msg {{ 'chat-mine' if m.sender_id == current_user.id else 'chat-theirs' }}{{ ' chat-driver' if m.sender_id == ride.provider_id else '' }}">
+          {% if m.sender_id != current_user.id %}
+            <span class="chat-name">{{ m.sender.full_name }}{% if m.sender_id == ride.provider_id %} · Driver{% endif %}</span>
+          {% endif %}
+          <p class="chat-body">{{ m.body }}</p>
+          <span class="chat-time">{{ m.created_at.strftime("%d %b, %I:%M %p") }}</span>
+        </div>
+      {% endfor %}
+      <p id="chatEmpty" class="chat-empty" {% if messages %}hidden{% endif %}>No messages yet. Say hello to your ride group!</p>
+    </div>
+
+    {% if can_send %}
+      <form method="post" id="chatForm" class="chat-form">
+        <textarea id="chatInput" name="body" rows="2" maxlength="{{ max_length }}" required
+                  placeholder="Type a message..."></textarea>
+        <div class="chat-form-foot">
+          <span class="user-meta"><span id="chatCount">0</span>/{{ max_length }} · Enter to send, Shift + Enter for a new line</span>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    {% elif role == "admin" and chat_open %}
+      <p class="chat-note">You are viewing this chat as an admin (read only).</p>
+    {% endif %}
+  </section>
+
+  <aside class="card chat-members">
+    <h2 class="section-title">On this ride</h2>
+    <ul class="member-list">
+      {% for m in members %}
+        <li>
+          <span>{{ m.full_name }}{% if m.id == current_user.id %} (you){% endif %}</span>
+          <span class="member-tag {{ 'member-tag-driver' if m.id == ride.provider_id else '' }}">
+            {{ "Driver" if m.id == ride.provider_id else "Passenger" }}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="user-meta">Only people on this ride can see these messages. Never share your Trip PIN here.</p>
+  </aside>
+</div>
+
+<script>
+(function () {
+  const box = document.getElementById("chatMessages");
+  const empty = document.getElementById("chatEmpty");
+  const status = document.getElementById("chatStatus");
+  const form = document.getElementById("chatForm");
+  const input = document.getElementById("chatInput");
+  const count = document.getElementById("chatCount");
+  let lastId = parseInt(box.dataset.lastId, 10) || 0;
+  let timer = null;
+
+  function scrollDown() {
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function addMessage(m) {
+    const div = document.createElement("div");
+    div.className = "chat-msg " + (m.mine ? "chat-mine" : "chat-theirs") + (m.is_driver ? " chat-driver" : "");
+
+    if (!m.mine) {
+      const name = document.createElement("span");
+      name.className = "chat-name";
+      name.textContent = m.sender + (m.is_driver ? " · Driver" : "");
+      div.appendChild(name);
+    }
+
+    const body = document.createElement("p");
+    body.className = "chat-body";
+    body.textContent = m.body;
+    div.appendChild(body);
+
+    const time = document.createElement("span");
+    time.className = "chat-time";
+    time.textContent = m.time;
+    div.appendChild(time);
+
+    box.insertBefore(div, empty);
+    empty.hidden = true;
+  }
+
+  function closeChat() {
+    clearInterval(timer);
+    status.textContent = "This chat is now closed.";
+    status.className = "chat-status chat-status-closed";
+    if (form) {
+      form.remove();
+    }
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch(box.dataset.pollUrl + "?after=" + lastId, {
+        headers: { "Accept": "application/json" }
+      });
+      if (!res.ok) {
+        return;
+      }
+      const data = await res.json();
+      const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+
+      data.messages.forEach(function (m) {
+        addMessage(m);
+        lastId = Math.max(lastId, m.id);
+      });
+
+      if (data.messages.length && nearBottom) {
+        scrollDown();
+      }
+      if (!data.open) {
+        closeChat();
+      }
+    } catch (err) {
+      return;
+    }
+  }
+
+  if (input) {
+    input.addEventListener("input", function () {
+      count.textContent = input.value.length;
+    });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (input.value.trim()) {
+          form.requestSubmit();
+        }
+      }
+    });
+    input.focus();
+  }
+
+  scrollDown();
+  if (box.dataset.open === "yes") {
+    timer = setInterval(poll, 5000);
+  }
+})();
+</script>
 {% endblock %}
