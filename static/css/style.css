@@ -2042,3 +2042,48 @@ a.ride-card {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.audit-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: #EDF2F6;
+  color: #51697C;
+}
+
+.audit-account {
+  background: #F7E8E5;
+  color: #8E2323;
+}
+
+.audit-nid {
+  background: #E4EFF7;
+  color: #13537C;
+}
+
+.audit-complaint {
+  background: #F7EADA;
+  color: #7A4A0C;
+}
+
+.audit-sos {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+.audit-details {
+  max-width: 320px;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}

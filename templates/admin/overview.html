@@ -13,6 +13,7 @@
     {{ button("Users", style="secondary", href=url_for('admin.users')) }}
     {{ button("Rides", style="secondary", href=url_for('admin.rides')) }}
     {{ button("Complaints (" ~ stats.open_complaints ~ ")", style="secondary", href=url_for('admin.complaints')) }}
+    {{ button("Audit log", style="secondary", href=url_for('admin.audit')) }}
   </div>
   {{ button("Review NIDs (" ~ stats.pending_nid ~ ")", href=url_for('admin.nid_list')) }}
 </div>
