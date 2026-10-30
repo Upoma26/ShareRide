@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Ride chat · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Ride chat</h1>
+    <p class="page-sub">
+      {{ ride.pickup }} → {{ ride.destination }} ·
+      {{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }}
+    </p>
+  </div>
+  {{ button("Back to ride", style="secondary", href=url_for('rides.detail', ride_id=ride.id)) }}
+</div>
+
+<div class="card">
+  <p class="user-meta">
+    Members:
+    {% for m in members %}{{ m.full_name }}{% if m.id == ride.provider_id %} (driver){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+  </p>
+  {% if closes_at and chat_open %}
+    <p class="user-meta">This chat closes on {{ closes_at.strftime("%d %b, %I:%M %p") }} (UTC).</p>
+  {% endif %}
+</div>
+
+<div class="card section-gap">
+  {% if messages %}
+    {% for m in messages %}
+      <p {% if loop.last %}id="latest"{% endif %}>
+        <strong>{{ m.sender.full_name }}{% if m.sender_id == ride.provider_id %} (driver){% endif %}</strong>
+        <span class="user-meta">{{ m.created_at.strftime("%d %b, %I:%M %p") }}</span><br>
+        {{ m.body }}
+      </p>
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">No messages yet. Say hello to your ride group!</p>
+  {% endif %}
+</div>
+
+{% if can_send %}
+  <form method="post" class="card section-gap">
+    <div class="form-group">
+      <label for="body">Message</label>
+      <textarea id="body" name="body" rows="2" maxlength="{{ max_length }}" required
+                placeholder="e.g. I am waiting at the pickup point"></textarea>
+    </div>
+    {{ button("Send") }}
+  </form>
+{% elif closed_reason %}
+  <div class="card section-gap"><p class="user-meta">{{ closed_reason }}</p></div>
+{% elif role == "admin" %}
+  <div class="card section-gap"><p class="user-meta">You are viewing this chat as an admin (read only).</p></div>
+{% endif %}
+{% endblock %}
