@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Audit log · ShareRide Admin{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Audit log</h1>
+    <p class="page-sub">Every admin action on ShareRide, newest first.</p>
+  </div>
+  <div class="head-actions">
+    {{ button("Download CSV", style="secondary", href=url_for('admin.audit_export', **link_args)) }}
+    {{ button("Back to overview", style="secondary", href=url_for('admin.overview')) }}
+  </div>
+</div>
+
+<form method="GET" action="{{ url_for('admin.audit') }}" class="card filter-bar">
+  <select name="group">
+    <option value="">All actions</option>
+    {% for key, label in groups.items() %}
+      <option value="{{ key }}" {% if filters.group == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="admin">
+    <option value="">All admins</option>
+    {% for a in admins %}
+      <option value="{{ a.id }}" {% if filters.admin == a.id %}selected{% endif %}>{{ a.full_name }}</option>
+    {% endfor %}
+  </select>
+  <input type="date" name="from" value="{{ filters.from }}" title="From">
+  <input type="date" name="to" value="{{ filters.to }}" title="To">
+  <input type="text" name="q" value="{{ filters.q }}" placeholder="Search details">
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if link_args %}
+    <a href="{{ url_for('admin.audit') }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  <h2 class="card-title">{{ pagination.total }} entr{{ "y" if pagination.total == 1 else "ies" }}</h2>
+  {% if logs %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Details</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td>
+                {{ log.created_at.strftime("%d %b %Y") }}
+                <span class="user-meta">{{ log.created_at.strftime("%I:%M %p") }} UTC</span>
+              </td>
+              <td>{{ log.admin.full_name }}</td>
+              <td>
+                <span class="audit-tag audit-{{ log.action.split('_')[0] }}">{{ labels.get(log.action, log.action) }}</span>
+              </td>
+              <td>
+                {% if log.target_type == "user" %}
+                  <a href="{{ url_for('admin.nid_review', user_id=log.target_id) }}">User #{{ log.target_id }}</a>
+                {% elif log.target_type == "complaint" %}
+                  <a href="{{ url_for('admin.complaint_detail', complaint_id=log.target_id) }}">Complaint #{{ log.target_id }}</a>
+                {% else %}
+                  {{ log.target_type|capitalize }} #{{ log.target_id }}
+                {% endif %}
+              </td>
+              <td class="audit-details">{{ log.details or "-" }}</td>
+              <td class="user-meta">{{ log.ip_address or "-" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+      <div class="pagination">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('admin.audit', page=pagination.prev_num, **link_args) }}" class="btn btn-secondary btn-sm">← Previous</a>
+        {% endif %}
+        <span class="user-meta">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+          <a href="{{ url_for('admin.audit', page=pagination.next_num, **link_args) }}" class="btn btn-secondary btn-sm">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p class="empty-state">No admin actions match these filters.</p>
+  {% endif %}
+</div>
+{% endblock %}

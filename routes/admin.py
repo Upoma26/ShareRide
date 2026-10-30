@@ -1,8 +1,11 @@
-from datetime import datetime
+import csv
+import io
+from datetime import datetime, timedelta
+
 
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for,
-    abort, send_from_directory, current_app,
+    abort, send_from_directory, current_app, Response,
 )
 from flask_login import current_user
 from sqlalchemy import or_
@@ -13,6 +16,7 @@ from models.ride import Ride, RIDE_STATUSES
 from models.nid import NidReview, NidAccessLog
 from models.sos import SosAlert
 from models.complaint import Complaint, COMPLAINT_CATEGORIES, COMPLAINT_STATUSES
+from models.audit import AuditLog
 from utils.decorators import role_required
 from utils.audit import log_action
 
@@ -278,6 +282,114 @@ def handle_complaint(complaint_id):
     flash(f"Complaint #{c.id} marked as {new_status}.", "success")
     return back
 
+AUDIT_GROUPS = {
+    "account": "Account actions",
+    "nid": "NID decisions",
+    "complaint": "Complaints",
+    "sos": "SOS alerts",
+}
+
+AUDIT_LABELS = {
+    "account_suspend": "Account suspended",
+    "account_block": "Account blocked",
+    "account_reinstate": "Account reinstated",
+    "nid_verified": "NID approved",
+    "nid_rejected": "NID rejected",
+    "sos_resolved": "SOS resolved",
+    "complaint_investigating": "Complaint investigating",
+    "complaint_resolved": "Complaint resolved",
+    "complaint_dismissed": "Complaint dismissed",
+}
+
+AUDIT_PER_PAGE = 50
+
+
+def parse_date(text):
+    try:
+        return datetime.strptime(text, "%Y-%m-%d")
+    except (TypeError, ValueError):
+        return None
+
+
+def audit_query(args):
+    group = args.get("group", "")
+    admin_id = args.get("admin", type=int)
+    date_from = parse_date(args.get("from", "").strip())
+    date_to = parse_date(args.get("to", "").strip())
+    q = args.get("q", "").strip()[:100]
+
+    query = AuditLog.query
+
+    if group in AUDIT_GROUPS:
+        query = query.filter(AuditLog.action.like(f"{group}\\_%", escape="\\"))
+    else:
+        group = ""
+    if admin_id:
+        query = query.filter(AuditLog.admin_id == admin_id)
+    if date_from:
+        query = query.filter(AuditLog.created_at >= date_from)
+    if date_to:
+        query = query.filter(AuditLog.created_at < date_to + timedelta(days=1))
+    if q:
+        query = query.filter(AuditLog.details.ilike(f"%{q}%"))
+
+    filters = {
+        "group": group,
+        "admin": admin_id or "",
+        "from": date_from.strftime("%Y-%m-%d") if date_from else "",
+        "to": date_to.strftime("%Y-%m-%d") if date_to else "",
+        "q": q,
+    }
+    return query.order_by(AuditLog.created_at.desc(), AuditLog.id.desc()), filters
+
+
+@admin_bp.route("/audit")
+@role_required("admin")
+def audit():
+    query, filters = audit_query(request.args)
+    page = max(request.args.get("page", 1, type=int), 1)
+    pagination = query.paginate(page=page, per_page=AUDIT_PER_PAGE, error_out=False)
+    admins = User.query.filter_by(role="admin").order_by(User.full_name).all()
+    link_args = {k: v for k, v in filters.items() if v}
+
+    return render_template(
+        "admin/audit.html",
+        logs=pagination.items,
+        pagination=pagination,
+        filters=filters,
+        link_args=link_args,
+        admins=admins,
+        groups=AUDIT_GROUPS,
+        labels=AUDIT_LABELS,
+    )
+
+
+@admin_bp.route("/audit/export")
+@role_required("admin")
+def audit_export():
+    query, _ = audit_query(request.args)
+    rows = query.limit(5000).all()
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Time (UTC)", "Admin", "Action", "Target", "Target ID", "Details", "IP address"])
+    for log in rows:
+        writer.writerow([
+            log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            log.admin.full_name,
+            AUDIT_LABELS.get(log.action, log.action),
+            log.target_type,
+            log.target_id,
+            log.details or "",
+            log.ip_address or "",
+        ])
+
+    filename = f"shareride-audit-{datetime.utcnow():%Y%m%d}.csv"
+    return Response(
+        "\ufeff" + out.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 @admin_bp.route("/nid")
 @role_required("admin")
