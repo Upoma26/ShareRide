@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Complaints · ShareRide Admin{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Complaints</h1>
+    <p class="page-sub">Problems reported by passengers and drivers.</p>
+  </div>
+  {{ button("Back to overview", style="secondary", href=url_for('admin.overview')) }}
+</div>
+
+<div class="tabs">
+  {% for s in ["open", "investigating", "resolved", "dismissed"] %}
+    <a href="{{ url_for('admin.complaints', status=s) }}" class="tab {% if status == s %}tab-active{% endif %}">
+      {{ s|capitalize }} <span class="tab-count">{{ counts[s] }}</span>
+    </a>
+  {% endfor %}
+  <a href="{{ url_for('admin.complaints', status='all') }}" class="tab {% if not status %}tab-active{% endif %}">All</a>
+</div>
+
+<form method="GET" action="{{ url_for('admin.complaints') }}" class="card filter-bar">
+  <input type="hidden" name="status" value="{{ status or 'all' }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by subject">
+  <select name="category">
+    <option value="">All categories</option>
+    {% for key, label in categories.items() %}
+      <option value="{{ key }}" {% if category == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or category %}
+    <a href="{{ url_for('admin.complaints', status=status or 'all') }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  <h2 class="card-title">{{ complaint_list|length }} complaint{{ "" if complaint_list|length == 1 else "s" }}</h2>
+  {% if complaint_list %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Subject</th>
+            <th>Category</th>
+            <th>From</th>
+            <th>About</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaint_list %}
+            <tr class="{% if c.category == 'safety' and c.is_open %}row-alert{% endif %}">
+              <td>{{ c.id }}</td>
+              <td><strong>{{ c.subject }}</strong></td>
+              <td>{{ c.category_label }}</td>
+              <td>{{ c.complainant.full_name }}</td>
+              <td>{{ c.against.full_name if c.against else "-" }}</td>
+              <td>{{ c.created_at.strftime("%d %b %Y") }}</td>
+              <td><span class="pill pill-complaint-{{ c.status }}">{{ c.status|capitalize }}</span></td>
+              <td>
+                <a href="{{ url_for('admin.complaint_detail', complaint_id=c.id) }}" class="btn btn-secondary btn-sm">Open</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No complaints match these filters.</p>
+  {% endif %}
+</div>
+{% endblock %}

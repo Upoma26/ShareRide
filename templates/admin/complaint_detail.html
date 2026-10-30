@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% from "partials/button.html" import button %}
+
+{% block title %}Complaint #{{ c.id }} · ShareRide Admin{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Complaint #{{ c.id }}</h1>
+    <p class="page-sub">{{ c.subject }}</p>
+  </div>
+  {{ button("All complaints", style="secondary", href=url_for('admin.complaints', status='all')) }}
+</div>
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <h2 class="card-title">Details</h2>
+      <dl class="detail-list">
+        <dt>Status</dt><dd><span class="pill pill-complaint-{{ c.status }}">{{ c.status|capitalize }}</span></dd>
+        <dt>Category</dt><dd>{{ c.category_label }}</dd>
+        <dt>From</dt>
+        <dd>
+          <a href="{{ url_for('admin.nid_review', user_id=c.complainant.id) }}">{{ c.complainant.full_name }}</a>
+          · {{ c.complainant.role|capitalize }} · {{ c.complainant.phone }}
+        </dd>
+        {% if c.against %}
+          <dt>About</dt>
+          <dd>
+            <a href="{{ url_for('admin.nid_review', user_id=c.against.id) }}">{{ c.against.full_name }}</a>
+            · {{ c.against.role|capitalize }}
+            · <span class="pill pill-account-{{ c.against.account_status }}">{{ c.against.account_status|capitalize }}</span>
+          </dd>
+        {% endif %}
+        {% if c.ride %}
+          <dt>Ride</dt>
+          <dd>
+            {{ c.ride.pickup }} → {{ c.ride.destination }} · {{ c.ride.ride_date.strftime("%d %b %Y") }}
+            · <a href="{{ url_for('rides.detail', ride_id=c.ride.id) }}">View ride</a>
+            · <a href="{{ url_for('chat.room', ride_id=c.ride.id) }}">Read ride chat</a>
+          </dd>
+        {% endif %}
+        <dt>Submitted</dt><dd>{{ c.created_at.strftime("%d %b %Y, %I:%M %p") }}</dd>
+      </dl>
+
+      <div class="ride-notes">
+        <strong>What the user reported</strong>
+        <p class="complaint-text">{{ c.description }}</p>
+      </div>
+    </div>
+
+    {% if c.against %}
+      <div class="card section-gap">
+        <h2 class="card-title">Other complaints about {{ c.against.full_name }} ({{ other_complaints|length }})</h2>
+        {% if other_complaints %}
+          <ul class="user-list">
+            {% for o in other_complaints %}
+              <li>
+                <div>
+                  <a href="{{ url_for('admin.complaint_detail', complaint_id=o.id) }}" class="complaint-link">#{{ o.id }} · {{ o.subject }}</a>
+                  <span class="user-meta">{{ o.category_label }} · {{ o.created_at.strftime("%d %b %Y") }}</span>
+                </div>
+                <span class="pill pill-complaint-{{ o.status }}">{{ o.status|capitalize }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="empty-state">This is the first complaint about this user.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <aside class="detail-side">
+    {% if c.is_open %}
+      <form method="POST" action="{{ url_for('admin.handle_complaint', complaint_id=c.id) }}" class="card" id="handleForm">
+        <h2 class="card-title">Handle complaint</h2>
+
+        <div class="form-group">
+          <label for="status">New status</label>
+          <select id="status" name="status">
+            <option value="investigating" {% if c.status == "open" %}selected{% endif %}>Investigating</option>
+            <option value="resolved">Resolved</option>
+            <option value="dismissed">Dismissed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="action">Action against user</label>
+          <select id="action" name="action" {% if not c.against %}disabled{% endif %}>
+            {% for key, label in actions.items() %}
+              <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if not c.against %}
+            <span class="user-meta">This complaint is not about a specific user.</span>
+          {% else %}
+            <span class="user-meta" id="actionHint">Choose "Resolved" to take an action.</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="admin_note">Reply to the user</label>
+          <textarea id="admin_note" name="admin_note" rows="4" maxlength="500"
+                    placeholder="e.g. We spoke to the driver and issued a warning.">{{ c.admin_note or "" }}</textarea>
+          <span class="user-meta">The user will see this on their complaint page. Required for Resolved or Dismissed.</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Save</button>
+      </form>
+    {% else %}
+      <div class="card">
+        <h2 class="card-title">Outcome</h2>
+        <dl class="detail-list">
+          <dt>Status</dt><dd><span class="pill pill-complaint-{{ c.status }}">{{ c.status|capitalize }}</span></dd>
+          <dt>Action</dt><dd>{{ actions.get(c.action_taken, "No action needed") }}</dd>
+          {% if c.handler %}<dt>Handled by</dt><dd>{{ c.handler.full_name }}</dd>{% endif %}
+          {% if c.resolved_at %}<dt>Closed</dt><dd>{{ c.resolved_at.strftime("%d %b %Y, %I:%M %p") }}</dd>{% endif %}
+        </dl>
+        {% if c.admin_note %}
+          <div class="ride-notes">
+            <strong>Reply sent</strong>
+            <p class="complaint-text">{{ c.admin_note }}</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </aside>
+</div>
+
+{% if c.is_open %}
+<script>
+(function () {
+  const form = document.getElementById("handleForm");
+  const status = document.getElementById("status");
+  const action = document.getElementById("action");
+  const note = document.getElementById("admin_note");
+  const hint = document.getElementById("actionHint");
+
+  function sync() {
+    const resolving = status.value === "resolved";
+    if (!action.hasAttribute("data-fixed")) {
+      action.disabled = {{ "true" if not c.against else "false" }} || !resolving;
+    }
+    if (!resolving) {
+      action.value = "none";
+    }
+    if (hint) {
+      hint.hidden = resolving;
+    }
+  }
+
+  status.addEventListener("change", sync);
+  sync();
+
+  form.addEventListener("submit", function (e) {
+    if ((status.value === "resolved" || status.value === "dismissed") && note.value.trim().length < 5) {
+      e.preventDefault();
+      alert("Please write a reply to the user (at least 5 characters).");
+      return;
+    }
+    if (action.value === "suspended" || action.value === "blocked") {
+      if (!confirm("This will " + (action.value === "blocked" ? "block" : "suspend") + " {{ c.against.full_name if c.against else '' }}'s account right away. Continue?")) {
+        e.preventDefault();
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -2025,3 +2025,20 @@ a.ride-card {
     align-items: stretch;
   }
 }
+
+.complaint-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 6px 0 0;
+}
+
+#handleForm select,
+#handleForm textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#handleForm select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
