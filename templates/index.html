@@ -1,28 +1,147 @@
 {% extends "base.html" %}
 
-{% block title %}ShareRide — Community Ride Sharing{% endblock %}
+{% block title %}ShareRide · Share a ride, split the cost{% endblock %}
 
 {% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <span class="hero-badge">Verified riders · Safe trips</span>
+    <h1 class="hero-title">Share a ride.<br>Split the cost.</h1>
+    <p class="hero-sub">
+      ShareRide connects people going the same way. Drivers fill their empty seats,
+      passengers travel for less, and every member is NID verified.
+    </p>
+    <div class="hero-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">Go to dashboard</a>
+        <a href="{{ url_for('rides.search') }}" class="btn btn-secondary btn-lg">Find a ride</a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Join ShareRide</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
 
-<div class="card">
-  <h1>Share the seat, split the cost, travel safer.</h1>
-  <p class="muted">
-    ShareRide connects verified commuters going the same way. Post your empty
-    seats or book one, with admin-verified identity, a Trip PIN at pickup and an
-    SOS button on every ride.
-  </p>
-  <p style="margin-top:18px">
-    <a class="btn" href="#">Create account</a>
-    <a class="btn btn-ghost" href="#">Sign in</a>
-  </p>
-</div>
+  <form method="GET" action="{{ url_for('rides.search') }}" class="card hero-search">
+    <h2 class="card-title">Where are you going?</h2>
+    <div class="form-group">
+      <label for="pickup">From</label>
+      <input type="text" id="pickup" name="pickup" placeholder="e.g. Farmgate" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label for="destination">To</label>
+      <input type="text" id="destination" name="destination" placeholder="e.g. Uttara" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" min="{{ today }}" value="{{ today }}">
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Search rides</button>
+  </form>
+</section>
 
-<div class="card">
-  <h2>What you get</h2>
-  <p><span class="pill">Verified identity</span> Every NID is reviewed manually by an admin.</p>
-  <p><span class="pill">Trip PIN</span> A trip cannot start without the passenger PIN.</p>
-  <p><span class="pill">SOS</span> An emergency button on every active ride.</p>
-  <p><span class="pill-warn pill">Time-bound chat</span> Chat closes 24 hours after the ride ends.</p>
-</div>
+<section class="stat-strip">
+  <div class="stat-strip-item">
+    <strong>{{ stats.verified_users }}</strong>
+    <span>Verified members</span>
+  </div>
+  <div class="stat-strip-item">
+    <strong>{{ stats.completed_trips }}</strong>
+    <span>Trips completed</span>
+  </div>
+  <div class="stat-strip-item">
+    <strong>{{ stats.open_rides }}</strong>
+    <span>Rides open now</span>
+  </div>
+</section>
 
+<section class="landing-section">
+  <h2 class="landing-title">How it works</h2>
+  <div class="steps-grid">
+    <div class="step-card">
+      <span class="step-num">1</span>
+      <h3>Sign up and verify</h3>
+      <p>Register with your phone, confirm the OTP and upload your NID. An admin checks it before you can ride.</p>
+    </div>
+    <div class="step-card">
+      <span class="step-num">2</span>
+      <h3>Post or find a ride</h3>
+      <p>Drivers post their route, time, seats and fare. Passengers search by route and date and request seats.</p>
+    </div>
+    <div class="step-card">
+      <span class="step-num">3</span>
+      <h3>Travel and pay</h3>
+      <p>Show your Trip PIN when you get in, ride together, then pay by cash, bKash, Nagad or card and rate each other.</p>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section">
+  <h2 class="landing-title">Built for safe, simple trips</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🪪</span>
+      <h3>NID verified members</h3>
+      <p>Every driver and passenger is checked by an admin before they can post or book.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔢</span>
+      <h3>Trip PIN check-in</h3>
+      <p>A one-time PIN proves the right passenger got into the right car.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🚨</span>
+      <h3>One-tap SOS</h3>
+      <p>Send your live location to our admins during a trip, or call 999 straight away.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <h3>Ride group chat</h3>
+      <p>Talk to your driver and co-passengers. The chat closes 24 hours after the trip.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⭐</span>
+      <h3>Two-way ratings</h3>
+      <p>Drivers and passengers rate each other, so good riders stand out.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💳</span>
+      <h3>Pay your way</h3>
+      <p>Cash, bKash, Nagad or card, with a printable receipt for every trip.</p>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section">
+  <div class="landing-head">
+    <h2 class="landing-title">Upcoming rides</h2>
+    <a href="{{ url_for('rides.search') }}" class="btn btn-secondary btn-sm">See all</a>
+  </div>
+  {% if upcoming %}
+    <div class="upcoming-grid">
+      {% for r in upcoming %}
+        <a href="{{ url_for('rides.detail', ride_id=r.id) }}" class="card upcoming-card">
+          <span class="upcoming-route"><strong>{{ r.pickup }}</strong> → {{ r.destination }}</span>
+          <span class="user-meta">{{ r.ride_date.strftime("%a, %d %b") }} · {{ r.ride_time.strftime("%I:%M %p") }}</span>
+          <span class="upcoming-foot">
+            <span class="upcoming-fare">৳{{ r.fare_per_seat }} <small>/ seat</small></span>
+            <span class="user-meta">{{ r.total_seats - r.booked_seats }} seat{{ "" if r.total_seats - r.booked_seats == 1 else "s" }} left</span>
+          </span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty-state">No rides are open right now. Check back soon, or post one if you drive.</p>
+  {% endif %}
+</section>
+
+<section class="cta-band">
+  <h2>Ready to ride together?</h2>
+  <p>Save money, cut traffic and meet people going your way.</p>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-light btn-lg">Go to dashboard</a>
+  {% else %}
+    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">Create a free account</a>
+  {% endif %}
+</section>
 {% endblock %}
