@@ -54,6 +54,8 @@ def create_app():
     app.register_blueprint(complaints_bp)
     from routes.chat import chat_bp
     app.register_blueprint(chat_bp)
+    from seed import seed_demo
+    app.cli.add_command(seed_demo)
     from routes.admin import admin_bp
     app.register_blueprint(admin_bp)
 
