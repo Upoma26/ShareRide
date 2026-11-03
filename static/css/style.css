@@ -2339,3 +2339,215 @@ a.ride-card {
     text-align: center;
   }
 }
+
+.nav-toggle {
+  display: none;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 760px) {
+  .navbar .wrap {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .nav-toggle span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+
+  .nav-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .navlinks {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 6px 0 10px;
+  }
+
+  .navlinks.open {
+    display: flex;
+  }
+
+  .navlinks a,
+  .navlinks button {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 12px 6px;
+    text-align: left;
+    border-top: 1px solid rgba(127, 127, 127, 0.2);
+  }
+
+  .navlinks form {
+    width: 100%;
+    margin: 0;
+  }
+
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .head-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .head-actions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .detail-layout {
+    grid-template-columns: 1fr;
+    display: grid;
+    gap: 16px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-bar input,
+  .filter-bar select,
+  .filter-bar .btn {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
+
+  .table {
+    min-width: 640px;
+  }
+
+  .booking-actions,
+  .user-list li {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-list dd {
+    margin: 0 0 10px;
+  }
+
+  .pin-display {
+    font-size: 36px;
+    letter-spacing: 6px;
+  }
+
+  .pin-input-lg {
+    font-size: 28px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .sos-btn {
+    width: 100%;
+  }
+
+  .receipt {
+    padding: 16px;
+  }
+
+  .footer {
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline {
+    font-size: 12px;
+  }
+
+  .hero-title {
+    font-size: 30px;
+  }
+}
