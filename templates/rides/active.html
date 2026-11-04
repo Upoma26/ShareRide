@@ -58,12 +58,18 @@
       <form method="POST" action="{{ url_for('rides.sos', ride_id=ride.id) }}" id="sosForm">
         <input type="hidden" name="latitude" id="lat">
         <input type="hidden" name="longitude" id="lng">
+        <input type="hidden" name="accuracy" id="acc">
         <div class="form-group">
           <textarea name="message" rows="2" maxlength="300" placeholder="What is happening? (optional)"></textarea>
         </div>
         <button type="submit" class="sos-btn" id="sosBtn">SOS</button>
       </form>
 
+      {% if open_alert %}
+        <p class="live-loc" id="liveLoc" data-url="{{ url_for('rides.sos_location', alert_id=open_alert.id) }}">
+          📍 Sharing your live location with ShareRide admins<span id="liveLocTime"></span>
+        </p>
+      {% endif %}
       <a href="tel:999" class="btn btn-secondary btn-block box-action">Call 999</a>
       <a href="{{ url_for('chat.room', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Open ride chat</a>
       <a href="{{ url_for('complaints.new', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Report a problem</a>
@@ -83,6 +89,7 @@
     var form = document.getElementById("sosForm");
     var btn = document.getElementById("sosBtn");
     var sent = false;
+    var geoOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
 
     form.addEventListener("submit", function (e) {
       if (sent) { return; }
@@ -90,7 +97,7 @@
       if (!confirm("Send an SOS alert to ShareRide now?")) { return; }
 
       btn.disabled = true;
-      btn.textContent = "Sending...";
+      btn.textContent = "Finding your location...";
 
       function send() {
         sent = true;
@@ -103,12 +110,47 @@
         function (pos) {
           document.getElementById("lat").value = pos.coords.latitude;
           document.getElementById("lng").value = pos.coords.longitude;
+          document.getElementById("acc").value = pos.coords.accuracy;
           send();
         },
         send,
-        { timeout: 5000 }
+        geoOptions
       );
     });
+
+    var live = document.getElementById("liveLoc");
+    if (!live || !navigator.geolocation) { return; }
+    var timeLabel = document.getElementById("liveLocTime");
+    var timer = null;
+
+    function push(pos) {
+      fetch(live.dataset.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        })
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.open === false) {
+            clearInterval(timer);
+            live.textContent = "✅ Your SOS has been resolved by an admin.";
+            return;
+          }
+          timeLabel.textContent = " · last sent " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        })
+        .catch(function () { return; });
+    }
+
+    function tick() {
+      navigator.geolocation.getCurrentPosition(push, function () { return; }, geoOptions);
+    }
+
+    tick();
+    timer = setInterval(tick, 30000);
   })();
 </script>
 {% endblock %}

@@ -14,7 +14,8 @@ from extensions import db
 from models.user import User
 from models.ride import Ride, RIDE_STATUSES
 from models.nid import NidReview, NidAccessLog
-from models.sos import SosAlert
+from models.sos import SosAlert, SosLocation
+from flask import jsonify
 from models.complaint import Complaint, COMPLAINT_CATEGORIES, COMPLAINT_STATUSES
 from models.audit import AuditLog
 from utils.decorators import role_required
@@ -536,3 +537,74 @@ def resolve_sos(alert_id):
         db.session.commit()
         flash("SOS alert marked as resolved.", "success")
     return redirect(url_for("admin.overview"))
+
+@admin_bp.route("/sos/<int:alert_id>")
+@role_required("admin")
+def sos_detail(alert_id):
+    alert = db.get_or_404(SosAlert, alert_id)
+    ride = alert.ride
+    passengers = [b for b in ride.bookings if b.status in ("accepted", "onboard", "completed")]
+    trail = alert.locations.order_by(SosLocation.id.desc()).limit(10).all()
+    other_alerts = (
+        SosAlert.query.filter(SosAlert.ride_id == ride.id, SosAlert.id != alert.id)
+        .order_by(SosAlert.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "admin/sos_detail.html",
+        alert=alert,
+        ride=ride,
+        sender=alert.user,
+        driver=ride.provider,
+        vehicle=ride.vehicle,
+        passengers=passengers,
+        latest=alert.latest_location,
+        trail=trail,
+        other_alerts=other_alerts,
+    )
+
+
+@admin_bp.route("/sos/<int:alert_id>/live")
+@role_required("admin")
+def sos_live(alert_id):
+    alert = db.get_or_404(SosAlert, alert_id)
+    loc = alert.latest_location
+
+    if loc:
+        lat, lng, acc, at = loc.latitude, loc.longitude, loc.accuracy, loc.created_at
+    else:
+        lat, lng, acc, at = alert.latitude, alert.longitude, None, alert.created_at
+
+    return jsonify(
+        status=alert.status,
+        latitude=lat,
+        longitude=lng,
+        accuracy=round(acc) if acc else None,
+        updated=at.strftime("%I:%M:%S %p") if at and lat is not None else None,
+        count=alert.locations.count(),
+    )
+
+
+@admin_bp.route("/sos/<int:alert_id>/close", methods=["POST"])
+@role_required("admin")
+def sos_close(alert_id):
+    alert = db.get_or_404(SosAlert, alert_id)
+    back = redirect(url_for("admin.sos_detail", alert_id=alert.id))
+    note = request.form.get("note", "").strip()[:300]
+
+    if alert.status != "open":
+        flash("This SOS alert is already resolved.", "warning")
+        return back
+    if len(note) < 5:
+        flash("Please write what action was taken (at least 5 characters).", "danger")
+        return back
+
+    alert.status = "resolved"
+    alert.resolved_at = datetime.now()
+    alert.resolved_by = current_user.id
+    log_action("sos_resolved", "sos", alert.id, f"Ride {alert.ride_id}: {note}")
+    db.session.commit()
+
+    flash("SOS alert marked as resolved.", "success")
+    return back

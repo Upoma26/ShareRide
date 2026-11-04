@@ -8,7 +8,8 @@ from extensions import db
 from models.booking import Booking
 from models.rating import Rating
 from models.ride import Ride
-from models.sos import SosAlert
+from models.sos import SosAlert, SosLocation
+from flask import jsonify
 from models.user import User
 
 rides_bp = Blueprint("rides", __name__, url_prefix="/rides")
@@ -202,6 +203,7 @@ def active(ride_id):
         role=role,
         passengers=passengers,
         my_alerts=my_alerts,
+        open_alert=next((a for a in my_alerts if a.status == "open"), None),
     )
 
 
@@ -224,8 +226,49 @@ def sos(ride_id):
         message=request.form.get("message", "").strip()[:300] or None,
     )
     db.session.add(alert)
+    db.session.flush()
+    if alert.latitude is not None and alert.longitude is not None:
+        db.session.add(SosLocation(
+            alert_id=alert.id,
+            latitude=alert.latitude,
+            longitude=alert.longitude,
+            accuracy=to_float(request.form.get("accuracy")),
+        ))
     db.session.commit()
 
     print(f"[SOS] Ride {ride.id} by {current_user.full_name} at {alert.latitude}, {alert.longitude}", flush=True)
     flash("SOS sent. ShareRide admins have been alerted. If you are in immediate danger, call 999.", "danger")
     return redirect(url_for("rides.active", ride_id=ride.id))
+
+LIVE_MIN_SECONDS = 20
+
+
+@rides_bp.route("/sos/<int:alert_id>/location", methods=["POST"])
+@login_required
+def sos_location(alert_id):
+    alert = db.get_or_404(SosAlert, alert_id)
+    if alert.user_id != current_user.id:
+        abort(404)
+    if alert.status != "open":
+        return jsonify(ok=False, open=False)
+
+    data = request.get_json(silent=True) or {}
+    lat = to_float(data.get("latitude"))
+    lng = to_float(data.get("longitude"))
+    if lat is None or lng is None or not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+        return jsonify(ok=False, open=True), 400
+
+    last = alert.latest_location
+    if last and (datetime.now() - last.created_at).total_seconds() < LIVE_MIN_SECONDS:
+        return jsonify(ok=True, open=True, skipped=True)
+
+    db.session.add(SosLocation(
+        alert_id=alert.id,
+        latitude=lat,
+        longitude=lng,
+        accuracy=to_float(data.get("accuracy")),
+    ))
+    alert.latitude = lat
+    alert.longitude = lng
+    db.session.commit()
+    return jsonify(ok=True, open=True)
