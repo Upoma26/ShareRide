@@ -31,8 +31,8 @@ class Complaint(db.Model):
     action_taken = db.Column(db.String(20))
     handled_by = db.Column(db.Integer, db.ForeignKey("users.id"))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     resolved_at = db.Column(db.DateTime)
 
     complainant = db.relationship("User", foreign_keys=[complainant_id])

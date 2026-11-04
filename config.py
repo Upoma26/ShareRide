@@ -1,4 +1,10 @@
 import os
+import time
+
+os.environ["TZ"] = "Asia/Dhaka"
+if hasattr(time, "tzset"):
+    time.tzset()
+    
 from datetime import timedelta
 from dotenv import load_dotenv
 

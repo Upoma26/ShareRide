@@ -20,7 +20,7 @@ class Booking(db.Model):
     pin_attempts = db.Column(db.Integer, default=0)
     pin_generated_at = db.Column(db.DateTime)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     decided_at = db.Column(db.DateTime)
     cancelled_at = db.Column(db.DateTime)
 

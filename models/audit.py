@@ -15,6 +15,6 @@ class AuditLog(db.Model):
     details = db.Column(db.String(300))
 
     ip_address = db.Column(db.String(45))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     admin = db.relationship("User", foreign_keys=[admin_id])

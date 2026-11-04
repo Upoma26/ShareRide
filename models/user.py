@@ -28,7 +28,7 @@ class User(UserMixin, db.Model):
 
     rating = db.Column(db.Float, default=0.0)
     total_trips = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     def set_password(self, raw_password):
         self.password_hash = generate_password_hash(raw_password)

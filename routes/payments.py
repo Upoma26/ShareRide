@@ -57,7 +57,7 @@ def pay(booking_id):
                 method=method,
                 status="paid",
                 transaction_ref=ref if method != "cash" else None,
-                paid_at=datetime.utcnow(),
+                paid_at=datetime.now(),
             )
             db.session.add(payment)
             db.session.flush()

@@ -14,7 +14,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     body = db.Column(db.String(MAX_MESSAGE_LENGTH), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, index=True)
 
     ride = db.relationship("Ride", backref=db.backref("messages", lazy="dynamic"))
     sender = db.relationship("User")

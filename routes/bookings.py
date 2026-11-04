@@ -175,7 +175,7 @@ def cancel(booking_id):
     else:
         release_seats(ride.id, booking.seats)
         booking.status = "cancelled"
-        booking.cancelled_at = datetime.utcnow()
+        booking.cancelled_at = datetime.now()
         db.session.commit()
         flash("Your booking has been cancelled and the seats were released.", "success")
 

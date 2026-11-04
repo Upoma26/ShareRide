@@ -24,7 +24,7 @@ class Ride(db.Model):
     notes = db.Column(db.String(300))
     status = db.Column(db.String(20), nullable=False, default="scheduled")
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     started_at = db.Column(db.DateTime)
     completed_at = db.Column(db.DateTime)
 

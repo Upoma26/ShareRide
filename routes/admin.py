@@ -258,7 +258,7 @@ def handle_complaint(complaint_id):
         c.admin_note = note
     if new_status in ("resolved", "dismissed"):
         c.action_taken = action
-        c.resolved_at = datetime.utcnow()
+        c.resolved_at = datetime.now()
 
     if action in COMPLAINT_ACCOUNT_ACTIONS:
         target = c.against
@@ -372,7 +372,7 @@ def audit_export():
 
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["Time (UTC)", "Admin", "Action", "Target", "Target ID", "Details", "IP address"])
+    writer.writerow(["Time ()", "Admin", "Action", "Target", "Target ID", "Details", "IP address"])
     for log in rows:
         writer.writerow([
             log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -384,7 +384,7 @@ def audit_export():
             log.ip_address or "",
         ])
 
-    filename = f"shareride-audit-{datetime.utcnow():%Y%m%d}.csv"
+    filename = f"shareride-audit-{datetime.now():%Y%m%d}.csv"
     return Response(
         "\ufeff" + out.getvalue(),
         mimetype="text/csv",
@@ -530,7 +530,7 @@ def resolve_sos(alert_id):
     alert = db.get_or_404(SosAlert, alert_id)
     if alert.status == "open":
         alert.status = "resolved"
-        alert.resolved_at = datetime.utcnow()
+        alert.resolved_at = datetime.now()
         alert.resolved_by = current_user.id
         log_action("sos_resolved", "sos", alert.id, f"Ride {alert.ride_id}")
         db.session.commit()

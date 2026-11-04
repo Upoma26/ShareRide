@@ -9,7 +9,7 @@ MAX_PIN_ATTEMPTS = 5
 def issue_pin(booking):
     pin = f"{secrets.randbelow(10000):04d}"
     booking.trip_pin_hash = generate_password_hash(pin)
-    booking.pin_generated_at = datetime.utcnow()
+    booking.pin_generated_at = datetime.now()
     booking.pin_attempts = 0
     return pin
 
