@@ -456,3 +456,38 @@ def complete_trip(ride_id):
 
     flash(f"Trip completed with {passengers} passenger(s).", "success")
     return redirect(url_for("provider.dashboard"))
+
+from models.message import Message
+
+HISTORY_STATUSES = ("completed", "cancelled", "missed")
+
+
+@provider_bp.route("/rides/<int:ride_id>/history")
+@role_required("provider")
+def ride_history(ride_id):
+    ride = get_own_ride_or_404(ride_id)
+    if ride.status not in HISTORY_STATUSES:
+        return redirect(url_for("provider.ride_requests", ride_id=ride.id))
+
+    bookings = sorted(ride.bookings, key=lambda b: b.id)
+    riders = [b for b in bookings if b.status == "completed"]
+    others = [b for b in bookings if b.status != "completed"]
+
+    expected = sum(b.total_fare for b in riders)
+    collected = sum(b.payment.amount for b in riders if b.payment)
+    unpaid = sum(1 for b in riders if not b.payment)
+
+    reviews = [r for b in riders for r in b.ratings if r.ratee_id == current_user.id]
+    messages = ride.messages.order_by(Message.id.asc()).all()
+
+    return render_template(
+        "provider/history.html",
+        ride=ride,
+        riders=riders,
+        others=others,
+        expected=expected,
+        collected=collected,
+        unpaid=unpaid,
+        reviews=reviews,
+        messages=messages,
+    )

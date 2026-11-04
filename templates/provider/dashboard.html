@@ -5,10 +5,14 @@
 
 {% macro ride_actions(ride) %}
   {% set pending_count = ride.bookings|selectattr("status", "equalto", "pending")|list|length %}
-  <a href="{{ url_for('provider.ride_requests', ride_id=ride.id) }}"
-     class="btn btn-sm {% if pending_count %}btn-primary{% else %}btn-secondary{% endif %}">
-    Requests{% if pending_count %} ({{ pending_count }}){% endif %}
-  </a>
+  {% if ride.status in ("completed", "cancelled", "missed") %}
+    <a href="{{ url_for('provider.ride_history', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">History</a>
+  {% else %}
+    <a href="{{ url_for('provider.ride_requests', ride_id=ride.id) }}"
+       class="btn btn-sm {% if pending_count %}btn-primary{% else %}btn-secondary{% endif %}">
+      Requests{% if pending_count %} ({{ pending_count }}){% endif %}
+    </a>
+  {% endif %}
   {% if ride.status in ("scheduled", "started") and ride.bookings|selectattr("status", "in", ["accepted", "onboard"])|list %}
     <a href="{{ url_for('provider.start_trip', ride_id=ride.id) }}" class="btn btn-primary btn-sm">
       {% if ride.status == "started" %}In progress{% else %}Start trip{% endif %}

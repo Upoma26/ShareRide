@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Ride history · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Ride history</h1>
+    <p class="page-sub">
+      {{ ride.pickup }} → {{ ride.destination }} ·
+      <span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span>
+    </p>
+  </div>
+  <a href="{{ url_for('provider.dashboard') }}" class="btn btn-secondary">Back to dashboard</a>
+</div>
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <h2 class="card-title">Ride details</h2>
+      <dl class="detail-list">
+        <dt>From</dt><dd>{{ ride.pickup }}</dd>
+        <dt>To</dt><dd>{{ ride.destination }}</dd>
+        <dt>Scheduled</dt><dd>{{ ride.ride_date.strftime("%A, %d %b %Y") }} · {{ ride.ride_time.strftime("%I:%M %p") }}</dd>
+        {% if ride.started_at %}<dt>Started</dt><dd>{{ ride.started_at.strftime("%d %b, %I:%M %p") }}</dd>{% endif %}
+        {% if ride.completed_at %}<dt>Completed</dt><dd>{{ ride.completed_at.strftime("%d %b, %I:%M %p") }}</dd>{% endif %}
+        <dt>Vehicle</dt><dd>{{ ride.vehicle.brand }} {{ ride.vehicle.model }} · {{ ride.vehicle.plate_number }}</dd>
+        <dt>Fare</dt><dd>৳{{ ride.fare_per_seat }} per seat · {{ ride.booked_seats }} of {{ ride.total_seats }} seats booked</dd>
+      </dl>
+      {% if ride.status == "missed" %}
+        <p class="missed-note box-action">This ride was not started in time, so it was marked as missed.</p>
+      {% endif %}
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Passengers ({{ riders|length }})</h2>
+      {% if riders %}
+        <ul class="user-list history-riders">
+          {% for b in riders %}
+            {% set my_rating = b.ratings|selectattr("rater_id", "equalto", current_user.id)|first %}
+            <li>
+              <div>
+                <strong>{{ b.seeker.full_name }}</strong>
+                <span class="user-meta">
+                  <a href="tel:{{ b.seeker.phone }}">{{ b.seeker.phone }}</a>
+                  · {{ b.seats }} seat{{ "" if b.seats == 1 else "s" }} · ৳{{ b.total_fare }}
+                </span>
+                <span class="user-meta">
+                  {% if b.payment %}
+                    Paid by {{ b.payment.method|capitalize }} · {{ b.payment.paid_at.strftime("%d %b, %I:%M %p") if b.payment.paid_at else "" }}
+                  {% else %}
+                    <span class="unpaid-text">Not paid yet</span>
+                  {% endif %}
+                </span>
+                {% if my_rating %}
+                  <span class="stars">{% for i in range(1, 6) %}{{ "★" if i <= my_rating.stars else "☆" }}{% endfor %}</span>
+                {% endif %}
+              </div>
+              <div class="table-actions">
+                {% if b.payment %}
+                  <a href="{{ url_for('payments.receipt', payment_id=b.payment.id) }}" class="btn btn-secondary btn-sm">Receipt</a>
+                {% endif %}
+                {% if not my_rating %}
+                  <a href="{{ url_for('ratings.rate', booking_id=b.id) }}" class="btn btn-primary btn-sm">⭐ Rate</a>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No passenger completed this ride.</p>
+      {% endif %}
+
+      {% if others %}
+        <h3 class="sos-subtitle">Other requests</h3>
+        <ul class="user-list">
+          {% for b in others %}
+            <li>
+              <span>{{ b.seeker.full_name }} · {{ b.seats }} seat{{ "" if b.seats == 1 else "s" }}</span>
+              <span class="pill pill-booking-{{ b.status }}">{{ b.status|capitalize }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Chat history ({{ messages|length }})</h2>
+      {% if messages %}
+        <div class="chat-messages history-chat">
+          {% for m in messages %}
+            <div class="chat-msg {{ 'chat-mine' if m.sender_id == current_user.id else 'chat-theirs' }}">
+              {% if m.sender_id != current_user.id %}
+                <span class="chat-name">{{ m.sender.full_name }}</span>
+              {% endif %}
+              <p class="chat-body">{{ m.body }}</p>
+              <span class="chat-time">{{ m.created_at.strftime("%d %b, %I:%M %p") }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No messages were sent on this ride.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="detail-side">
+    <div class="card">
+      <h2 class="card-title">Earnings</h2>
+      <dl class="detail-list">
+        <dt>Expected</dt><dd>৳{{ expected }}</dd>
+        <dt>Collected</dt><dd><strong>৳{{ collected }}</strong></dd>
+        <dt>Unpaid</dt><dd>{{ unpaid }} passenger{{ "" if unpaid == 1 else "s" }}</dd>
+      </dl>
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Reviews for you</h2>
+      {% if reviews %}
+        <div class="review-list">
+          {% for r in reviews %}
+            <div class="review">
+              <span class="stars">{% for i in range(1, 6) %}{{ "★" if i <= r.stars else "☆" }}{% endfor %}</span>
+              <span class="user-meta">{{ r.rater.full_name }} · {{ r.created_at.strftime("%d %b %Y") }}</span>
+              {% if r.comment %}<p>"{{ r.comment }}"</p>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="user-meta">No reviews for this ride yet.</p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
