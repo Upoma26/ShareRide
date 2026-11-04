@@ -14,13 +14,6 @@ UPCOMING_LIMIT = 3
 @main_bp.route("/")
 def index():
     today = date.today()
-    members = User.query.filter(User.role != "admin")
-
-    stats = {
-        "verified_users": members.filter(User.verification_status == "verified").count(),
-        "completed_trips": Ride.query.filter_by(status="completed").count(),
-        "open_rides": Ride.query.filter(Ride.status == "scheduled", Ride.ride_date >= today).count(),
-    }
 
     candidates = (
         Ride.query.join(User, Ride.provider_id == User.id)
@@ -35,12 +28,12 @@ def index():
     )
     upcoming = [r for r in candidates if r.booked_seats < r.total_seats][:UPCOMING_LIMIT]
 
-    return render_template(
-        "index.html",
-        stats=stats,
-        upcoming=upcoming,
-        today=today.isoformat(),
-    )
+    return render_template("index.html", upcoming=upcoming, today=today.isoformat())
+
+
+@main_bp.route("/about")
+def about():
+    return render_template("about.html")
 
 
 @main_bp.route("/dashboard")

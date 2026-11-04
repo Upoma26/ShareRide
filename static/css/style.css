@@ -2607,5 +2607,73 @@ html[data-theme="dark"] .feature-icon {
 @media print {
   html[data-theme="dark"] {
     filter: none;
+.about-section {
+  margin-top: 32px;
+}
+
+.about-title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  color: #0F2434;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.about-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.about-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #D4E1EB;
+}
+
+.about-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: #0F2434;
+}
+
+.about-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #51697C;
+}
+
+.about-card .step-num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+}
+
+.about-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.about-safety ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #51697C;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .about-grid,
+  .about-grid-3 {
+    grid-template-columns: 1fr;
   }
 }
