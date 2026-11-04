@@ -132,25 +132,80 @@ def render_post_form():
     )
 
 
+from datetime import datetime, timedelta
+
+DASHBOARD_STATUSES = ("scheduled", "started", "completed", "cancelled", "missed")
+
+
+def parse_filter_date(text):
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
 @provider_bp.route("/dashboard")
 @role_required("provider")
 def dashboard():
-    rides = (
+    all_rides = (
         Ride.query.filter_by(provider_id=current_user.id)
         .order_by(Ride.ride_date.desc(), Ride.ride_time.desc())
         .all()
     )
     today = date.today()
-    upcoming = [r for r in rides if r.status == "scheduled" and r.ride_date >= today]
-    completed = [r for r in rides if r.status == "completed"]
+    upcoming = [r for r in all_rides if r.status == "scheduled" and r.ride_date >= today]
+    completed = [r for r in all_rides if r.status == "completed"]
     earnings = sum(r.booked_seats * r.fare_per_seat for r in completed)
+    counts = {s: sum(1 for r in all_rides if r.status == s) for s in DASHBOARD_STATUSES}
+
+    status = request.args.get("status", "")
+    if status not in DASHBOARD_STATUSES:
+        status = ""
+
+    quick = request.args.get("range", "")
+    start = parse_filter_date(request.args.get("start", ""))
+    end = parse_filter_date(request.args.get("end", ""))
+
+    if quick == "today":
+        start = end = today
+    elif quick == "week":
+        start = today - timedelta(days=today.weekday())
+        end = start + timedelta(days=6)
+    elif quick == "month":
+        start = today.replace(day=1)
+        end = (start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    else:
+        quick = ""
+
+    rides = all_rides
+    if status:
+        rides = [r for r in rides if r.status == status]
+    if start:
+        rides = [r for r in rides if r.ride_date >= start]
+    if end:
+        rides = [r for r in rides if r.ride_date <= end]
+
+    start_text = start.isoformat() if start else ""
+    end_text = end.isoformat() if end else ""
+
+    def dash_url(**changes):
+        args = {"status": status, "range": quick, "start": start_text, "end": end_text}
+        args.update(changes)
+        return url_for("provider.dashboard", **{k: v for k, v in args.items() if v})
 
     return render_template(
         "provider/dashboard.html",
         rides=rides,
-        total_count=len(rides),
+        total_count=len(all_rides),
         upcoming_count=len(upcoming),
         earnings=earnings,
+        counts=counts,
+        status=status,
+        quick=quick,
+        start_text=start_text,
+        end_text=end_text,
+        filtered=bool(status or start or end),
+        dash_url=dash_url,
     )
 
 

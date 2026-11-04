@@ -3,6 +3,26 @@
 
 {% block title %}Provider Dashboard · ShareRide{% endblock %}
 
+{% macro ride_actions(ride) %}
+  {% set pending_count = ride.bookings|selectattr("status", "equalto", "pending")|list|length %}
+  <a href="{{ url_for('provider.ride_requests', ride_id=ride.id) }}"
+     class="btn btn-sm {% if pending_count %}btn-primary{% else %}btn-secondary{% endif %}">
+    Requests{% if pending_count %} ({{ pending_count }}){% endif %}
+  </a>
+  {% if ride.status in ("scheduled", "started") and ride.bookings|selectattr("status", "in", ["accepted", "onboard"])|list %}
+    <a href="{{ url_for('provider.start_trip', ride_id=ride.id) }}" class="btn btn-primary btn-sm">
+      {% if ride.status == "started" %}In progress{% else %}Start trip{% endif %}
+    </a>
+  {% endif %}
+  {% if ride.status == "scheduled" %}
+    <a href="{{ url_for('provider.edit_ride', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+    <form method="POST" action="{{ url_for('provider.cancel_ride', ride_id=ride.id) }}"
+          onsubmit="return confirm('Cancel this ride? All its bookings will be cancelled too.');">
+      <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+    </form>
+  {% endif %}
+{% endmacro %}
+
 {% block content %}
 <div class="page-head">
   <div>
@@ -19,7 +39,7 @@
   </div>
 {% endif %}
 
-<div class="stat-grid">
+<div class="stat-grid dash-stats">
   <div class="stat-card">
     <span class="stat-label">Total rides</span>
     <span class="stat-value">{{ total_count }}</span>
@@ -35,10 +55,40 @@
 </div>
 
 <div class="card">
-  <h2 class="card-title">My rides</h2>
+  <div class="dash-head">
+    <h2 class="card-title">My rides</h2>
+    {% if filtered %}
+      <a href="{{ url_for('provider.dashboard') }}" class="btn btn-secondary btn-sm">Clear filters</a>
+    {% endif %}
+  </div>
+
+  <div class="tabs dash-tabs">
+    <a href="{{ dash_url(status='') }}" class="tab {% if not status %}tab-active{% endif %}">
+      All <span class="tab-count">{{ total_count }}</span>
+    </a>
+    {% for s in ["scheduled", "started", "completed", "cancelled", "missed"] %}
+      <a href="{{ dash_url(status=s) }}" class="tab {% if status == s %}tab-active{% endif %}">
+        {{ s|capitalize }} <span class="tab-count">{{ counts[s] }}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="dash-dates">
+    <div class="quick-range">
+      <a href="{{ dash_url(range='today', start='', end='') }}" class="btn btn-sm {% if quick == 'today' %}btn-primary{% else %}btn-secondary{% endif %}">Today</a>
+      <a href="{{ dash_url(range='week', start='', end='') }}" class="btn btn-sm {% if quick == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">This week</a>
+      <a href="{{ dash_url(range='month', start='', end='') }}" class="btn btn-sm {% if quick == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">This month</a>
+    </div>
+    <form method="GET" action="{{ url_for('provider.dashboard') }}" class="date-range-form">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <label>From <input type="date" name="start" value="{{ start_text }}"></label>
+      <label>To <input type="date" name="end" value="{{ end_text }}"></label>
+      <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+    </form>
+  </div>
 
   {% if rides %}
-    <div class="table-wrap">
+    <div class="table-wrap rides-table-wrap">
       <table class="table">
         <thead>
           <tr>
@@ -53,7 +103,6 @@
         </thead>
         <tbody>
           {% for ride in rides %}
-            {% set pending_count = ride.bookings|selectattr("status", "equalto", "pending")|list|length %}
             <tr>
               <td><strong>{{ ride.pickup }}</strong> → {{ ride.destination }}</td>
               <td>{{ ride.ride_date.strftime("%d %b %Y") }}</td>
@@ -61,31 +110,30 @@
               <td>{{ ride.available_seats }} / {{ ride.total_seats }}</td>
               <td>৳{{ ride.fare_per_seat }}</td>
               <td><span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span></td>
-              <td>
-                <div class="table-actions">
-                  <a href="{{ url_for('provider.ride_requests', ride_id=ride.id) }}"
-                     class="btn btn-sm {% if pending_count %}btn-primary{% else %}btn-secondary{% endif %}">
-                    Requests{% if pending_count %} ({{ pending_count }}){% endif %}
-                  </a>
-                  {% if ride.status in ("scheduled", "started") and ride.bookings|selectattr("status", "in", ["accepted", "onboard"])|list %}
-                    <a href="{{ url_for('provider.start_trip', ride_id=ride.id) }}" class="btn btn-primary btn-sm">
-                      {% if ride.status == "started" %}In progress{% else %}Start trip{% endif %}
-                    </a>
-                  {% endif %}
-                  {% if ride.status == "scheduled" %}
-                    <a href="{{ url_for('provider.edit_ride', ride_id=ride.id) }}" class="btn btn-secondary btn-sm">Edit</a>
-                    <form method="POST" action="{{ url_for('provider.cancel_ride', ride_id=ride.id) }}"
-                          onsubmit="return confirm('Cancel this ride? All its bookings will be cancelled too.');">
-                      <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
-                    </form>
-                  {% endif %}
-                </div>
-              </td>
+              <td><div class="table-actions">{{ ride_actions(ride) }}</div></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    <div class="ride-cards">
+      {% for ride in rides %}
+        <article class="ride-card-m">
+          <div class="ride-card-top">
+            <strong>{{ ride.pickup }} → {{ ride.destination }}</strong>
+            <span class="pill pill-{{ ride.status }}">{{ ride.status|capitalize }}</span>
+          </div>
+          <p class="user-meta">
+            {{ ride.ride_date.strftime("%a, %d %b") }} · {{ ride.ride_time.strftime("%I:%M %p") }}
+            · {{ ride.available_seats }}/{{ ride.total_seats }} seats left · ৳{{ ride.fare_per_seat }}
+          </p>
+          <div class="table-actions">{{ ride_actions(ride) }}</div>
+        </article>
+      {% endfor %}
+    </div>
+  {% elif filtered %}
+    <p class="empty-state">No rides match these filters.</p>
   {% else %}
     <div class="empty-state">
       <p>You have not posted any rides yet.</p>
