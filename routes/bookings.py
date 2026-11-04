@@ -32,6 +32,25 @@ def find_active_booking(ride_id, seeker_id):
     ).first()
 
 
+from datetime import date, timedelta
+
+BOOKING_FILTERS = {
+    "pending": ("pending",),
+    "accepted": ("accepted",),
+    "onboard": ("onboard",),
+    "completed": ("completed",),
+    "cancelled": ("cancelled", "rejected"),
+    "missed": ("missed",),
+}
+
+
+def parse_booking_date(text):
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
 @bookings_bp.route("/mine")
 @role_required("seeker")
 def mine():
@@ -50,11 +69,61 @@ def mine():
             upcoming.append(booking)
         else:
             past.append(booking)
-
     upcoming.sort(key=lambda b: (b.ride.ride_date, b.ride.ride_time))
 
-    return render_template("bookings/mine.html", upcoming=upcoming, past=past)
+    counts = {k: sum(1 for b in bookings if b.status in v) for k, v in BOOKING_FILTERS.items()}
 
+    status = request.args.get("status", "")
+    if status not in BOOKING_FILTERS:
+        status = ""
+
+    today = date.today()
+    quick = request.args.get("range", "")
+    start = parse_booking_date(request.args.get("start", ""))
+    end = parse_booking_date(request.args.get("end", ""))
+
+    if quick == "today":
+        start = end = today
+    elif quick == "week":
+        start = today - timedelta(days=today.weekday())
+        end = start + timedelta(days=6)
+    elif quick == "month":
+        start = today.replace(day=1)
+        end = (start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    else:
+        quick = ""
+
+    results = bookings
+    if status:
+        results = [b for b in results if b.status in BOOKING_FILTERS[status]]
+    if start:
+        results = [b for b in results if b.ride.ride_date >= start]
+    if end:
+        results = [b for b in results if b.ride.ride_date <= end]
+    results = sorted(results, key=lambda b: (b.ride.ride_date, b.ride.ride_time), reverse=True)
+
+    start_text = start.isoformat() if start else ""
+    end_text = end.isoformat() if end else ""
+
+    def mine_url(**changes):
+        args = {"status": status, "range": quick, "start": start_text, "end": end_text}
+        args.update(changes)
+        return url_for("bookings.mine", **{k: v for k, v in args.items() if v})
+
+    return render_template(
+        "bookings/mine.html",
+        upcoming=upcoming,
+        past=past,
+        results=results,
+        filtered=bool(status or start or end),
+        counts=counts,
+        total_count=len(bookings),
+        status=status,
+        quick=quick,
+        start_text=start_text,
+        end_text=end_text,
+        mine_url=mine_url,
+    )
 
 @bookings_bp.route("/history")
 @role_required("seeker")

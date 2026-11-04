@@ -20,7 +20,7 @@
     <div class="ride-meta">
       <span class="ride-provider">{{ ride.provider.full_name }}</span>
       <span class="ride-vehicle">{{ b.seats }} seat{{ "" if b.seats == 1 else "s" }} · ৳{{ b.total_fare }}</span>
-      {% if b.status == "accepted" %}
+      {% if b.status in ("accepted", "onboard", "completed") %}
         <span class="ride-vehicle">Plate: <strong>{{ ride.vehicle.plate_number }}</strong></span>
       {% endif %}
     </div>
@@ -47,28 +47,75 @@
     <h1 class="page-title">My bookings</h1>
     <p class="page-sub">Your upcoming trips and booking history.</p>
   </div>
-  {{ button("Find a ride", href=url_for('rides.search')) }}
+  <div class="head-actions">
+    {{ button("Trip history", style="secondary", href=url_for('bookings.history')) }}
+    {{ button("Find a ride", href=url_for('rides.search')) }}
+  </div>
 </div>
 
-<h2 class="section-title">Upcoming ({{ upcoming|length }})</h2>
-{% if upcoming %}
-  <div class="ride-list">
-    {% for b in upcoming %}{{ booking_card(b, True) }}{% endfor %}
+<div class="card">
+  <div class="dash-head">
+    <h2 class="card-title">Filter</h2>
+    {% if filtered %}
+      <a href="{{ url_for('bookings.mine') }}" class="btn btn-secondary btn-sm">Clear filters</a>
+    {% endif %}
   </div>
-{% else %}
-  <div class="card empty-state">
-    <p>You have no upcoming trips.</p>
-    {{ button("Trip history", style="secondary", href=url_for('bookings.history')) }}
-    {{ button("Search for a ride", href=url_for('rides.search')) }}
-  </div>
-{% endif %}
 
-<h2 class="section-title section-gap">Past and cancelled ({{ past|length }})</h2>
-{% if past %}
-  <div class="ride-list">
-    {% for b in past %}{{ booking_card(b, False) }}{% endfor %}
+  <div class="tabs dash-tabs">
+    <a href="{{ mine_url(status='') }}" class="tab {% if not status %}tab-active{% endif %}">
+      All <span class="tab-count">{{ total_count }}</span>
+    </a>
+    {% for key, label in [("pending", "Pending"), ("accepted", "Accepted"), ("onboard", "On board"), ("completed", "Completed"), ("cancelled", "Cancelled"), ("missed", "Missed")] %}
+      <a href="{{ mine_url(status=key) }}" class="tab {% if status == key %}tab-active{% endif %}">
+        {{ label }} <span class="tab-count">{{ counts[key] }}</span>
+      </a>
+    {% endfor %}
   </div>
+
+  <div class="dash-dates">
+    <div class="quick-range">
+      <a href="{{ mine_url(range='today', start='', end='') }}" class="btn btn-sm {% if quick == 'today' %}btn-primary{% else %}btn-secondary{% endif %}">Today</a>
+      <a href="{{ mine_url(range='week', start='', end='') }}" class="btn btn-sm {% if quick == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">This week</a>
+      <a href="{{ mine_url(range='month', start='', end='') }}" class="btn btn-sm {% if quick == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">This month</a>
+    </div>
+    <form method="GET" action="{{ url_for('bookings.mine') }}" class="date-range-form">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <label>From <input type="date" name="start" value="{{ start_text }}"></label>
+      <label>To <input type="date" name="end" value="{{ end_text }}"></label>
+      <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+    </form>
+  </div>
+</div>
+
+{% if filtered %}
+  <h2 class="section-title section-gap">Results ({{ results|length }})</h2>
+  {% if results %}
+    <div class="ride-list">
+      {% for b in results %}{{ booking_card(b, True) }}{% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state"><p>No bookings match these filters.</p></div>
+  {% endif %}
 {% else %}
-  <div class="card empty-state"><p>Nothing here yet.</p></div>
+  <h2 class="section-title section-gap">Upcoming ({{ upcoming|length }})</h2>
+  {% if upcoming %}
+    <div class="ride-list">
+      {% for b in upcoming %}{{ booking_card(b, True) }}{% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state">
+      <p>You have no upcoming trips.</p>
+      {{ button("Search for a ride", href=url_for('rides.search')) }}
+    </div>
+  {% endif %}
+
+  <h2 class="section-title section-gap">Past and cancelled ({{ past|length }})</h2>
+  {% if past %}
+    <div class="ride-list">
+      {% for b in past %}{{ booking_card(b, False) }}{% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state"><p>Nothing here yet.</p></div>
+  {% endif %}
 {% endif %}
 {% endblock %}
