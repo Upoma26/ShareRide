@@ -27,10 +27,12 @@
             <a href="{{ url_for('complaints.mine') }}">Complaints</a>
           {% endif %}
           <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('main.about') }}">About</a>
           <a href="{{ url_for('auth.logout') }}">Sign out</a>
         {% else %}
           <a href="{{ url_for('auth.login') }}">Sign in</a>
           <a href="{{ url_for('auth.register') }}">Register</a>
+          <a href="{{ url_for('main.about') }}">About</a>
         {% endif %}
       </div>
     </div>
