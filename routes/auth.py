@@ -35,7 +35,7 @@ def get_pending_user():
 
 def send_new_code(user):
     code = create_otp(user)
-    if code and current_app.debug:
+    if code and current_app.config.get("DEMO_MODE"):
         flash(f"Demo mode: your OTP is {code}", "warning")
     return code
 
