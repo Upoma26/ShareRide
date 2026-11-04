@@ -20,7 +20,7 @@ class Vehicle(db.Model):
 
     registration_doc = db.Column(db.String(255))
     is_approved = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     owner = db.relationship("User", backref="vehicles")
 

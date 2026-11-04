@@ -15,7 +15,7 @@ class SosAlert(db.Model):
     message = db.Column(db.String(300))
 
     status = db.Column(db.String(20), nullable=False, default="open")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     resolved_at = db.Column(db.DateTime)
     resolved_by = db.Column(db.Integer, db.ForeignKey("users.id"))
 

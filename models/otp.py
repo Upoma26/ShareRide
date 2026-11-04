@@ -19,7 +19,7 @@ class OTP(db.Model):
     expires_at = db.Column(db.DateTime, nullable=False)
     attempts = db.Column(db.Integer, default=0)
     is_used = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     @staticmethod
     def generate_code():
@@ -27,14 +27,14 @@ class OTP(db.Model):
 
     def set_code(self, code):
         self.code_hash = generate_password_hash(code)
-        self.expires_at = datetime.utcnow() + timedelta(minutes=OTP_EXPIRY_MINUTES)
+        self.expires_at = datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)
 
     def check_code(self, code):
         return check_password_hash(self.code_hash, code)
 
     @property
     def is_expired(self):
-        return datetime.utcnow() > self.expires_at
+        return datetime.now() > self.expires_at
 
     @property
     def is_locked(self):

@@ -13,7 +13,7 @@ class Rating(db.Model):
 
     stars = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.String(300))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     booking = db.relationship("Booking", backref="ratings")
     rater = db.relationship("User", foreign_keys=[rater_id])

@@ -20,7 +20,7 @@
     <div id="chatStatus" class="chat-status {{ 'chat-status-open' if chat_open else 'chat-status-closed' }}">
       {% if chat_open %}
         {% if closes_at %}
-          Chat open until {{ closes_at.strftime("%d %b, %I:%M %p") }} (UTC)
+          Chat open until {{ closes_at.strftime("%d %b, %I:%M %p") }} ()
         {% else %}
           Chat is open for everyone on this ride
         {% endif %}

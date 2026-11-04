@@ -19,7 +19,7 @@ class Payment(db.Model):
     transaction_ref = db.Column(db.String(60))
     receipt_number = db.Column(db.String(30), unique=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     paid_at = db.Column(db.DateTime)
 
     booking = db.relationship("Booking", backref=db.backref("payment", uselist=False))

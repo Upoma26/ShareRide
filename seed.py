@@ -51,7 +51,7 @@ def make_users():
             phone_verified=True,
             verification_status=verification,
             account_status=account,
-            created_at=datetime.utcnow() - timedelta(days=20),
+            created_at=datetime.now() - timedelta(days=20),
         )
         db.session.add(user)
         users[key] = user
@@ -101,7 +101,7 @@ def book(ride, seeker, seats, status):
         seats=seats,
         total_fare=seats * ride.fare_per_seat,
         status=status,
-        decided_at=None if status == "pending" else datetime.utcnow(),
+        decided_at=None if status == "pending" else datetime.now(),
     )
     if status in SEAT_TAKING_STATUSES:
         ride.available_seats -= seats
@@ -165,7 +165,7 @@ def refresh_user_stats(users):
 
 def seed_everything():
     now = datetime.now()
-    utc_now = datetime.utcnow()
+    _now = datetime.now()
     u = make_users()
     admin = u["admin"]
 
@@ -174,37 +174,37 @@ def seed_everything():
 
     old_start = (now - timedelta(days=2)).replace(hour=8, minute=30)
     old_ride = make_ride(u["rahim"], axio, "Farmgate", "Uttara Sector 7", old_start, 3, 150, "completed")
-    old_ride.started_at = utc_now - timedelta(days=2, hours=1)
-    old_ride.completed_at = utc_now - timedelta(days=2)
+    old_ride.started_at = _now - timedelta(days=2, hours=1)
+    old_ride.completed_at = _now - timedelta(days=2)
     b1 = book(old_ride, u["ayesha"], 1, "completed")
     b2 = book(old_ride, u["tanvir"], 1, "completed")
-    pay(b1, "bkash", "BK8F3K2L9Q", utc_now - timedelta(days=2))
-    pay(b2, "cash", None, utc_now - timedelta(days=2))
-    rate(b1, u["ayesha"], u["rahim"], 5, "Very punctual and drove carefully.", utc_now - timedelta(days=2))
-    rate(b1, u["rahim"], u["ayesha"], 5, "Was ready on time. Great passenger.", utc_now - timedelta(days=2))
-    rate(b2, u["tanvir"], u["rahim"], 4, "Good ride, a little late at pickup.", utc_now - timedelta(days=2))
-    say(old_ride, u["rahim"], "Assalamu alaikum, I will reach Farmgate in 10 minutes.", utc_now - timedelta(days=2, hours=1, minutes=20))
-    say(old_ride, u["ayesha"], "Okay, I am waiting near the foot over bridge.", utc_now - timedelta(days=2, hours=1, minutes=18))
-    say(old_ride, u["tanvir"], "I am at the bus stand, white shirt.", utc_now - timedelta(days=2, hours=1, minutes=15))
+    pay(b1, "bkash", "BK8F3K2L9Q", _now - timedelta(days=2))
+    pay(b2, "cash", None, _now - timedelta(days=2))
+    rate(b1, u["ayesha"], u["rahim"], 5, "Very punctual and drove carefully.", _now - timedelta(days=2))
+    rate(b1, u["rahim"], u["ayesha"], 5, "Was ready on time. Great passenger.", _now - timedelta(days=2))
+    rate(b2, u["tanvir"], u["rahim"], 4, "Good ride, a little late at pickup.", _now - timedelta(days=2))
+    say(old_ride, u["rahim"], "Assalamu alaikum, I will reach Farmgate in 10 minutes.", _now - timedelta(days=2, hours=1, minutes=20))
+    say(old_ride, u["ayesha"], "Okay, I am waiting near the foot over bridge.", _now - timedelta(days=2, hours=1, minutes=18))
+    say(old_ride, u["tanvir"], "I am at the bus stand, white shirt.", _now - timedelta(days=2, hours=1, minutes=15))
 
     recent_start = now - timedelta(hours=4)
     recent_ride = make_ride(u["nusrat"], grace, "Mirpur 10", "Motijheel", recent_start, 3, 120, "completed")
-    recent_ride.started_at = utc_now - timedelta(hours=4)
-    recent_ride.completed_at = utc_now - timedelta(hours=3)
+    recent_ride.started_at = _now - timedelta(hours=4)
+    recent_ride.completed_at = _now - timedelta(hours=3)
     b3 = book(recent_ride, u["mim"], 1, "completed")
-    pay(b3, "nagad", "NG77Q1Z4XT", utc_now - timedelta(hours=3))
-    rate(b3, u["mim"], u["nusrat"], 4, "Safe driver, but the AC was off.", utc_now - timedelta(hours=2))
-    say(recent_ride, u["nusrat"], "I have reached Mirpur 10 roundabout.", utc_now - timedelta(hours=4, minutes=5))
-    say(recent_ride, u["mim"], "Coming in 2 minutes!", utc_now - timedelta(hours=4, minutes=3))
-    say(recent_ride, u["mim"], "Thank you, apu. I think I left my umbrella in the back seat.", utc_now - timedelta(hours=2, minutes=40))
+    pay(b3, "nagad", "NG77Q1Z4XT", _now - timedelta(hours=3))
+    rate(b3, u["mim"], u["nusrat"], 4, "Safe driver, but the AC was off.", _now - timedelta(hours=2))
+    say(recent_ride, u["nusrat"], "I have reached Mirpur 10 roundabout.", _now - timedelta(hours=4, minutes=5))
+    say(recent_ride, u["mim"], "Coming in 2 minutes!", _now - timedelta(hours=4, minutes=3))
+    say(recent_ride, u["mim"], "Thank you, apu. I think I left my umbrella in the back seat.", _now - timedelta(hours=2, minutes=40))
 
     live_start = now - timedelta(minutes=20)
     live_ride = make_ride(u["rahim"], axio, "Dhanmondi 27", "Gulshan 1", live_start, 3, 140, "started")
-    live_ride.started_at = utc_now - timedelta(minutes=20)
+    live_ride.started_at = _now - timedelta(minutes=20)
     b4 = book(live_ride, u["ayesha"], 1, "onboard")
     book(live_ride, u["mim"], 1, "accepted")
-    say(live_ride, u["rahim"], "We are leaving Dhanmondi now.", utc_now - timedelta(minutes=19))
-    say(live_ride, u["mim"], "Bhaiya, I am a bit late, please wait 5 minutes at Kakoli.", utc_now - timedelta(minutes=12))
+    say(live_ride, u["rahim"], "We are leaving Dhanmondi now.", _now - timedelta(minutes=19))
+    say(live_ride, u["mim"], "Bhaiya, I am a bit late, please wait 5 minutes at Kakoli.", _now - timedelta(minutes=12))
     db.session.add(SosAlert(
         ride_id=live_ride.id,
         user_id=u["ayesha"].id,
@@ -212,7 +212,7 @@ def seed_everything():
         longitude=90.4074,
         message="Driver took an unknown road, please check.",
         status="open",
-        created_at=utc_now - timedelta(minutes=5),
+        created_at=_now - timedelta(minutes=5),
     ))
 
     tomorrow = (now + timedelta(days=1)).replace(hour=9, minute=0)
@@ -237,7 +237,7 @@ def seed_everything():
         subject="AC was not working",
         description="The ride was listed as an AC car but the AC was off for the whole trip and it was very hot.",
         status="open",
-        created_at=utc_now - timedelta(hours=2),
+        created_at=_now - timedelta(hours=2),
     )
 
     resolved_complaint = Complaint(
@@ -250,8 +250,8 @@ def seed_everything():
         admin_note="We checked the messages and suspended this account. Thank you for reporting.",
         action_taken="suspended",
         handled_by=admin.id,
-        created_at=utc_now - timedelta(days=5),
-        resolved_at=utc_now - timedelta(days=4),
+        created_at=_now - timedelta(days=5),
+        resolved_at=_now - timedelta(days=4),
     )
 
     dismissed_complaint = Complaint(
@@ -263,21 +263,21 @@ def seed_everything():
         admin_note="We checked the transaction ID and only one payment was made. Please check your bKash statement again.",
         action_taken="none",
         handled_by=admin.id,
-        created_at=utc_now - timedelta(days=1, hours=6),
-        resolved_at=utc_now - timedelta(days=1),
+        created_at=_now - timedelta(days=1, hours=6),
+        resolved_at=_now - timedelta(days=1),
     )
 
     db.session.add_all([open_complaint, resolved_complaint, dismissed_complaint])
     db.session.flush()
 
     for key in ("rahim", "nusrat", "ayesha", "tanvir", "mim", "sabbir"):
-        audit(admin, "nid_verified", "user", u[key].id, None, utc_now - timedelta(days=15))
+        audit(admin, "nid_verified", "user", u[key].id, None, _now - timedelta(days=15))
     audit(admin, "account_suspend", "user", u["sabbir"].id,
-          f"active -> suspended: complaint #{resolved_complaint.id}", utc_now - timedelta(days=4))
+          f"active -> suspended: complaint #{resolved_complaint.id}", _now - timedelta(days=4))
     audit(admin, "complaint_resolved", "complaint", resolved_complaint.id,
-          "action: suspended | We checked the messages and suspended this account.", utc_now - timedelta(days=4))
+          "action: suspended | We checked the messages and suspended this account.", _now - timedelta(days=4))
     audit(admin, "complaint_dismissed", "complaint", dismissed_complaint.id,
-          "action: none | Only one payment was made.", utc_now - timedelta(days=1))
+          "action: none | Only one payment was made.", _now - timedelta(days=1))
 
     db.session.flush()
     refresh_user_stats(u)

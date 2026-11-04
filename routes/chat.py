@@ -49,7 +49,7 @@ def is_open(ride):
     if ride.status == "cancelled":
         return False
     end = closes_at(ride)
-    return end is None or datetime.utcnow() < end
+    return end is None or datetime.now() < end
 
 
 def closed_reason(ride):

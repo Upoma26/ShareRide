@@ -235,7 +235,7 @@ def cancel_ride(ride_id):
         flash("Only scheduled rides can be cancelled.", "warning")
         return redirect(url_for("provider.dashboard"))
 
-    now = datetime.utcnow()
+    now = datetime.now()
     affected = 0
     for booking in ride.bookings:
         if booking.is_active:
@@ -305,7 +305,7 @@ def decide_booking(booking_id):
         flash("Please choose accept or reject.", "danger")
         return back
 
-    booking.decided_at = datetime.utcnow()
+    booking.decided_at = datetime.now()
     db.session.commit()
     flash(message, category)
     return back
@@ -358,7 +358,7 @@ def verify_pin(booking_id):
         booking.status = "onboard"
         if ride.status == "scheduled":
             ride.status = "started"
-            ride.started_at = datetime.utcnow()
+            ride.started_at = datetime.now()
         db.session.commit()
         flash(f"PIN correct. {booking.seeker.full_name} is on board.", "success")
         return back
@@ -382,7 +382,7 @@ def complete_trip(ride_id):
         flash("Only a started trip can be completed.", "warning")
         return redirect(url_for("provider.start_trip", ride_id=ride.id))
 
-    now = datetime.utcnow()
+    now = datetime.now()
     passengers = 0
     for booking in ride.bookings:
         if booking.status == "onboard":

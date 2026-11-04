@@ -16,7 +16,7 @@ def create_otp(user):
         .order_by(OTP.created_at.desc())
         .first()
     )
-    if latest and datetime.utcnow() - latest.created_at < timedelta(seconds=OTP_RESEND_SECONDS):
+    if latest and datetime.now() - latest.created_at < timedelta(seconds=OTP_RESEND_SECONDS):
         return None
 
     OTP.query.filter_by(user_id=user.id, is_used=False).update({"is_used": True})
@@ -64,7 +64,7 @@ def get_otp_timers(user):
     if otp is None:
         return 0, 0
 
-    now = datetime.utcnow()
+    now = datetime.now()
     expires_in = max(0, int((otp.expires_at - now).total_seconds()))
     resend_in = max(0, OTP_RESEND_SECONDS - int((now - otp.created_at).total_seconds()))
 
