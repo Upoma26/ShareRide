@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}About · ShareRide{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">About ShareRide</h1>
+    <p class="page-sub">A community ride-sharing platform for safe and affordable travel in Dhaka.</p>
+  </div>
+</div>
+
+<section class="about-section">
+  <h2 class="about-title">How it works</h2>
+  <div class="about-grid about-grid-3">
+    <div class="about-card">
+      <span class="step-num">1</span>
+      <div>
+        <h3>Sign up and verify</h3>
+        <p>Register with your phone, confirm the OTP and upload your NID. An admin checks it.</p>
+      </div>
+    </div>
+    <div class="about-card">
+      <span class="step-num">2</span>
+      <div>
+        <h3>Post or find a ride</h3>
+        <p>Drivers post route, time, seats and fare. Passengers search and request seats.</p>
+      </div>
+    </div>
+    <div class="about-card">
+      <span class="step-num">3</span>
+      <div>
+        <h3>Travel and pay</h3>
+        <p>Show your Trip PIN, ride together, pay your way and rate each other.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about-section">
+  <h2 class="about-title">Features</h2>
+  <div class="about-grid">
+    <div class="about-card"><span class="about-icon">🪪</span><div><h3>NID verified members</h3><p>Every driver and passenger is checked by an admin.</p></div></div>
+    <div class="about-card"><span class="about-icon">🔢</span><div><h3>Trip PIN check-in</h3><p>A one-time PIN proves the right passenger got in.</p></div></div>
+    <div class="about-card"><span class="about-icon">🚨</span><div><h3>One-tap SOS</h3><p>Send your live location to admins during a trip.</p></div></div>
+    <div class="about-card"><span class="about-icon">💬</span><div><h3>Ride group chat</h3><p>Talk to your driver and co-passengers. Closes 24 hours after the trip.</p></div></div>
+    <div class="about-card"><span class="about-icon">⭐</span><div><h3>Two-way ratings</h3><p>Drivers and passengers rate each other after every trip.</p></div></div>
+    <div class="about-card"><span class="about-icon">💳</span><div><h3>Pay your way</h3><p>Cash, bKash, Nagad or card, with a printable receipt.</p></div></div>
+  </div>
+</section>
+
+<section class="about-section">
+  <h2 class="about-title">Your safety</h2>
+  <div class="card about-safety">
+    <ul>
+      <li>Driver plate and phone are shared only after your booking is accepted.</li>
+      <li>Never share your Trip PIN with anyone except your driver at pickup.</li>
+      <li>Use the SOS button or call 999 if you feel unsafe.</li>
+      <li>Report any problem from your booking page. Admins review every complaint.</li>
+    </ul>
+  </div>
+</section>
+
+{% if not current_user.is_authenticated %}
+  <section class="cta-band">
+    <h2>Ready to ride together?</h2>
+    <p>Save money, cut traffic and meet people going your way.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">Create a free account</a>
+  </section>
+{% endif %}
+{% endblock %}
