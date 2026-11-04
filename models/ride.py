@@ -2,7 +2,7 @@ from datetime import datetime
 
 from extensions import db
 
-RIDE_STATUSES = ("scheduled", "started", "completed", "cancelled")
+RIDE_STATUSES = ("scheduled", "started", "completed", "cancelled", "missed")
 
 
 class Ride(db.Model):
