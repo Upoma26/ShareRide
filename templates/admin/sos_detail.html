@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}SOS #{{ alert.id }} · ShareRide Admin{% endblock %}
+
+{% block content %}
+{% set lat = latest.latitude if latest else alert.latitude %}
+{% set lng = latest.longitude if latest else alert.longitude %}
+
+<div class="page-head">
+  <div>
+    <h1 class="page-title">🚨 SOS #{{ alert.id }}</h1>
+    <p class="page-sub">
+      Sent {{ alert.created_at.strftime("%d %b %Y, %I:%M %p") }} by {{ sender.full_name }}
+      · <span class="pill {{ 'pill-sos-open' if alert.status == 'open' else 'pill-sos-resolved' }}">{{ alert.status|capitalize }}</span>
+    </p>
+  </div>
+  <a href="{{ url_for('admin.overview') }}" class="btn btn-secondary">Back to overview</a>
+</div>
+
+{% if alert.message %}
+  <div class="sos-message">"{{ alert.message }}"</div>
+{% endif %}
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="card">
+      <h2 class="card-title">Location</h2>
+      <div id="sosLive" data-url="{{ url_for('admin.sos_live', alert_id=alert.id) }}" data-open="{{ 'yes' if alert.status == 'open' else 'no' }}">
+        {% if lat is not none and lng is not none %}
+          <div class="sos-map">
+            <iframe id="sosMap" title="SOS location"
+              src="https://www.openstreetmap.org/export/embed.html?bbox={{ lng - 0.005 }},{{ lat - 0.005 }},{{ lng + 0.005 }},{{ lat + 0.005 }}&layer=mapnik&marker={{ lat }},{{ lng }}"></iframe>
+          </div>
+          <p class="user-meta box-action">
+            <span id="sosUpdated">Last update {{ (latest.created_at if latest else alert.created_at).strftime("%I:%M:%S %p") }}</span>
+            <span id="sosAccuracy">{% if latest and latest.accuracy %} · accurate to about {{ latest.accuracy|round|int }} m{% endif %}</span>
+            {% if alert.status == "open" %}<span class="live-dot">● Live</span>{% endif %}
+          </p>
+          <a id="sosGmaps" href="https://maps.google.com/?q={{ lat }},{{ lng }}" target="_blank" rel="noopener" class="btn btn-secondary">Open in Google Maps</a>
+        {% else %}
+          <p class="empty-state">No location was shared. The phone may have blocked location access.</p>
+        {% endif %}
+      </div>
+
+      {% if trail %}
+        <h3 class="sos-subtitle">Recent locations</h3>
+        <ul class="user-list">
+          {% for p in trail %}
+            <li>
+              <span>{{ p.created_at.strftime("%I:%M:%S %p") }}</span>
+              <a href="https://maps.google.com/?q={{ p.latitude }},{{ p.longitude }}" target="_blank" rel="noopener" class="user-meta">
+                {{ "%.5f"|format(p.latitude) }}, {{ "%.5f"|format(p.longitude) }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Ride</h2>
+      <dl class="detail-list">
+        <dt>Route</dt><dd>{{ ride.pickup }} → {{ ride.destination }}</dd>
+        <dt>Scheduled</dt><dd>{{ ride.ride_date.strftime("%d %b %Y") }}, {{ ride.ride_time.strftime("%I:%M %p") }}</dd>
+        <dt>Started</dt><dd>{{ ride.started_at.strftime("%I:%M %p") if ride.started_at else "-" }}</dd>
+        <dt>Status</dt><dd>{{ ride.status|capitalize }}</dd>
+      </dl>
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Driver and vehicle</h2>
+      <dl class="detail-list">
+        <dt>Driver</dt>
+        <dd>
+          <a href="{{ url_for('admin.nid_review', user_id=driver.id) }}">{{ driver.full_name }}</a>
+          · {{ driver.phone }} · ★ {{ driver.rating or 0 }}
+          · <span class="pill pill-account-{{ driver.account_status }}">{{ driver.account_status|capitalize }}</span>
+        </dd>
+        <dt>Vehicle</dt><dd>{{ vehicle.brand }} {{ vehicle.model }} · {{ vehicle.color or "" }}</dd>
+        <dt>Plate</dt><dd><strong>{{ vehicle.plate_number }}</strong></dd>
+      </dl>
+    </div>
+
+    <div class="card section-gap">
+      <h2 class="card-title">Passengers ({{ passengers|length }})</h2>
+      {% if passengers %}
+        <ul class="user-list">
+          {% for b in passengers %}
+            <li>
+              <div>
+                <strong>{{ b.seeker.full_name }}</strong>{% if b.seeker_id == sender.id %} (sent SOS){% endif %}
+                <span class="user-meta">{{ b.seeker.phone }} · {{ b.status|capitalize }}</span>
+              </div>
+              <a href="tel:{{ b.seeker.phone }}" class="btn btn-secondary btn-sm">Call</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No passengers on this ride.</p>
+      {% endif %}
+    </div>
+
+    {% if other_alerts %}
+      <div class="card section-gap">
+        <h2 class="card-title">Other SOS on this ride ({{ other_alerts|length }})</h2>
+        <ul class="user-list">
+          {% for o in other_alerts %}
+            <li>
+              <a href="{{ url_for('admin.sos_detail', alert_id=o.id) }}">#{{ o.id }} · {{ o.user.full_name }}</a>
+              <span class="user-meta">{{ o.created_at.strftime("%I:%M %p") }} · {{ o.status|capitalize }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
+  <aside class="detail-side">
+    <div class="card sos-panel">
+      <h2 class="card-title">Quick actions</h2>
+      <a href="tel:999" class="btn btn-danger btn-block">Call 999</a>
+      <a href="tel:{{ sender.phone }}" class="btn btn-secondary btn-block box-action">Call {{ sender.full_name }}</a>
+      <a href="tel:{{ driver.phone }}" class="btn btn-secondary btn-block box-action">Call driver</a>
+      <a href="{{ url_for('chat.room', ride_id=ride.id) }}" class="btn btn-secondary btn-block box-action">Read ride chat</a>
+      <a href="{{ url_for('admin.nid_review', user_id=sender.id) }}" class="btn btn-secondary btn-block box-action">Open sender's account</a>
+    </div>
+
+    <div class="card section-gap">
+      {% if alert.status == "open" %}
+        <h2 class="card-title">Resolve</h2>
+        <form method="POST" action="{{ url_for('admin.sos_close', alert_id=alert.id) }}" id="sosCloseForm">
+          <div class="form-group">
+            <label for="note">What action was taken?</label>
+            <textarea id="note" name="note" rows="3" maxlength="300" required
+                      placeholder="e.g. Called the passenger, she is safe. Driver warned."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Mark as resolved</button>
+        </form>
+      {% else %}
+        <h2 class="card-title">Resolved</h2>
+        <p class="user-meta">
+          By {{ alert.resolver.full_name if alert.resolver else "an admin" }}
+          {% if alert.resolved_at %} on {{ alert.resolved_at.strftime("%d %b %Y, %I:%M %p") }}{% endif %}
+        </p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  const box = document.getElementById("sosLive");
+  const map = document.getElementById("sosMap");
+  const form = document.getElementById("sosCloseForm");
+
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      if (document.getElementById("note").value.trim().length < 5) {
+        e.preventDefault();
+        alert("Please write what action was taken (at least 5 characters).");
+      }
+    });
+  }
+
+  if (!box || box.dataset.open !== "yes") {
+    return;
+  }
+
+  let lastKey = "";
+
+  async function refresh() {
+    try {
+      const res = await fetch(box.dataset.url, { headers: { "Accept": "application/json" } });
+      if (!res.ok) {
+        return;
+      }
+      const d = await res.json();
+      if (d.latitude === null || d.longitude === null) {
+        return;
+      }
+      const key = d.latitude + "," + d.longitude;
+      if (map && key !== lastKey) {
+        lastKey = key;
+        const s = 0.005;
+        map.src = "https://www.openstreetmap.org/export/embed.html?bbox=" +
+          (d.longitude - s) + "," + (d.latitude - s) + "," + (d.longitude + s) + "," + (d.latitude + s) +
+          "&layer=mapnik&marker=" + d.latitude + "," + d.longitude;
+        document.getElementById("sosGmaps").href = "https://maps.google.com/?q=" + key;
+      }
+      if (d.updated) {
+        document.getElementById("sosUpdated").textContent = "Last update " + d.updated;
+      }
+      document.getElementById("sosAccuracy").textContent = d.accuracy ? " · accurate to about " + d.accuracy + " m" : "";
+      if (d.status !== "open") {
+        location.reload();
+      }
+    } catch (err) {
+      return;
+    }
+  }
+
+  setInterval(refresh, 15000);
+})();
+</script>
+{% endblock %}

@@ -2677,3 +2677,64 @@ html[data-theme="dark"] .feature-icon {
     grid-template-columns: 1fr;
   }
 }
+
+.live-loc {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #E3F1E8;
+  color: #1E5B35;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sos-message {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #F7E8E5;
+  border-left: 4px solid #8E2323;
+  color: #8E2323;
+  font-weight: 600;
+}
+
+.sos-map {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #D4E1EB;
+}
+
+.sos-map iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: 0;
+}
+
+.sos-subtitle {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  color: #0F2434;
+}
+
+.live-dot {
+  margin-left: 8px;
+  color: #8E2323;
+  font-weight: 700;
+}
+
+.pill-sos-open {
+  background: #F7E8E5;
+  color: #8E2323;
+}
+
+.pill-sos-resolved {
+  background: #E3F1E8;
+  color: #1E5B35;
+}
+
+@media (max-width: 760px) {
+  .sos-map iframe {
+    height: 240px;
+  }
+}
