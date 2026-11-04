@@ -43,4 +43,4 @@ def dashboard():
         return redirect(url_for("provider.dashboard"))
     if current_user.role == "admin":
         return redirect(url_for("admin.overview"))
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", today=date.today().isoformat())

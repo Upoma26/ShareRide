@@ -2879,3 +2879,62 @@ html[data-theme="dark"] .feature-icon {
   color: #8E2323;
   font-weight: 600;
 }
+
+.hello-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.hello-card p {
+  margin: 4px 0 0;
+}
+
+.dash-search {
+  margin-top: 16px;
+}
+
+.dash-search-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.3fr 1.2fr 0.8fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 12px;
+}
+
+.dash-search-grid .form-group {
+  margin: 0;
+}
+
+.dash-search-grid input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dash-search-btn .btn {
+  min-width: 110px;
+}
+
+.label-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: #51697C;
+}
+
+@media (max-width: 860px) {
+  .dash-search-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dash-search-btn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .hello-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
