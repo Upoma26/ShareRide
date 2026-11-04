@@ -67,11 +67,14 @@
           <span class="ride-vehicle">
             {{ ride.vehicle.brand }} {{ ride.vehicle.model }}{% if ride.vehicle.color %} · {{ ride.vehicle.color }}{% endif %}
           </span>
-          {% if booking.status in ("accepted", "onboard") %}
+          {% if booking.status in ("accepted", "onboard", "completed") %}
             <span class="ride-vehicle">Plate: <strong>{{ ride.vehicle.plate_number }}</strong></span>
-            <span class="ride-vehicle">Phone: <strong>{{ ride.provider.phone }}</strong></span>
-          {% else %}
+            <span class="ride-vehicle">Phone: <a href="tel:{{ ride.provider.phone }}"><strong>{{ ride.provider.phone }}</strong></a></span>
+            <a href="tel:{{ ride.provider.phone }}" class="btn btn-secondary btn-sm driver-call">📞 Call driver</a>
+          {% elif booking.status == "pending" %}
             <span class="user-meta">Plate and phone are shared after the driver accepts.</span>
+          {% else %}
+            <span class="user-meta">Driver contact is not shared because this booking is not active.</span>
           {% endif %}
         </div>
       </div>

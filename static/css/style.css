@@ -2938,3 +2938,8 @@ html[data-theme="dark"] .feature-icon {
     align-items: flex-start;
   }
 }
+
+.driver-call {
+  align-self: flex-start;
+  margin-top: 8px;
+}
