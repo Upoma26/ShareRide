@@ -2943,3 +2943,24 @@ html[data-theme="dark"] .feature-icon {
   align-self: flex-start;
   margin-top: 8px;
 }
+
+.filter-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #51697C;
+}
+
+.filter-date input {
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .filter-date,
+  .filter-date input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

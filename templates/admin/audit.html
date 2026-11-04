@@ -28,8 +28,14 @@
       <option value="{{ a.id }}" {% if filters.admin == a.id %}selected{% endif %}>{{ a.full_name }}</option>
     {% endfor %}
   </select>
-  <input type="date" name="from" value="{{ filters.from }}" title="From">
-  <input type="date" name="to" value="{{ filters.to }}" title="To">
+  <label class="filter-date">
+    From date
+    <input type="date" name="from" value="{{ filters.from }}">
+  </label>
+  <label class="filter-date">
+    To date
+    <input type="date" name="to" value="{{ filters.to }}">
+  </label>
   <input type="text" name="q" value="{{ filters.q }}" placeholder="Search details">
   <button type="submit" class="btn btn-primary">Filter</button>
   {% if link_args %}
