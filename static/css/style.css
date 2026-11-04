@@ -2607,6 +2607,8 @@ html[data-theme="dark"] .feature-icon {
 @media print {
   html[data-theme="dark"] {
     filter: none;
+  }
+}
 .about-section {
   margin-top: 32px;
 }
@@ -2856,4 +2858,24 @@ html[data-theme="dark"] .feature-icon {
   .date-range-form input {
     flex: 1;
   }
+}
+
+.history-chat {
+  height: auto;
+  max-height: 420px;
+  border-radius: 12px;
+}
+
+.history-riders li {
+  align-items: flex-start;
+}
+
+.history-riders .user-meta {
+  display: block;
+  margin-top: 2px;
+}
+
+.unpaid-text {
+  color: #8E2323;
+  font-weight: 600;
 }
