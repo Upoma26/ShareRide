@@ -2551,3 +2551,61 @@ video {
     font-size: 30px;
   }
 }
+
+.theme-toggle {
+  margin-left: auto;
+  margin-right: 12px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #D4E1EB;
+  border-radius: 50%;
+  background: #FFFFFF;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: #E4EFF7;
+}
+
+.theme-icon-light {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-icon-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-icon-light {
+  display: inline;
+}
+
+html[data-theme="dark"] {
+  background: #FFFFFF;
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+html[data-theme="dark"] img,
+html[data-theme="dark"] video,
+html[data-theme="dark"] iframe,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .about-icon,
+html[data-theme="dark"] .feature-icon {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+@media (max-width: 760px) {
+  .theme-toggle {
+    margin-right: 4px;
+  }
+}
+
+@media print {
+  html[data-theme="dark"] {
+    filter: none;
+  }
+}
