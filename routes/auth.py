@@ -45,6 +45,8 @@ def send_new_code(user, purpose="verify"):
     code = create_otp(user)
     if code:
         send_sms(user.phone, SMS_TEXT[purpose].format(code=code))
+        if current_app.config.get("DEMO_MODE"):
+            flash(f"Demo mode: your OTP is {code}", "warning")
     return code
 
 
