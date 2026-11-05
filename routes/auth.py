@@ -13,6 +13,7 @@ from extensions import db
 from models.user import User
 from utils.uploads import save_nid_file
 from utils.otp_service import create_otp, verify_otp, get_otp_timers
+from utils.sms import send_sms
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -34,10 +35,16 @@ def get_pending_user():
     return db.session.get(User, user_id)
 
 
-def send_new_code(user):
+SMS_TEXT = {
+    "verify": "Your ShareRide verification code is {code}. It expires in 5 minutes. Do not share it with anyone.",
+    "reset": "Your ShareRide password reset code is {code}. It expires in 5 minutes. If you did not ask for this, ignore this message.",
+}
+
+
+def send_new_code(user, purpose="verify"):
     code = create_otp(user)
-    if code and current_app.config.get("DEMO_MODE"):
-        flash(f"Demo mode: your OTP is {code}", "warning")
+    if code:
+        send_sms(user.phone, SMS_TEXT[purpose].format(code=code))
     return code
 
 
@@ -105,7 +112,7 @@ def register():
 
         session["pending_user_id"] = user.id
         send_new_code(user)
-        flash("Account created! We sent a 6-digit code to your phone.", "success")
+        flash("Account created! We sent a 6-digit OTP to your phone by SMS.", "success")
         return redirect(url_for("auth.verify_otp_page"))
 
     return render_template("register.html")
@@ -220,7 +227,7 @@ def forgot_password():
         session["reset_phone"] = phone
         user = User.query.filter_by(phone=phone).first()
         if user and user.role != "admin":
-            send_new_code(user)
+            send_new_code(user, "reset")
         flash("If an account exists for this number, we sent a 6-digit code.", "success")
         return redirect(url_for("auth.reset_password"))
 
@@ -278,7 +285,7 @@ def resend_reset_code():
         flash("If an account exists for this number, we sent a new code.", "success")
         return redirect(url_for("auth.reset_password"))
 
-    if send_new_code(user):
+    if send_new_code(user, "reset"):
         flash("A new code has been sent to your phone.", "success")
     else:
         flash("Please wait a minute before asking for a new code.", "warning")
