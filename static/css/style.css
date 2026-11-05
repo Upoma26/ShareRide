@@ -2964,3 +2964,19 @@ html[data-theme="dark"] .feature-icon {
     box-sizing: border-box;
   }
 }
+
+.forgot-link {
+  text-align: right;
+  margin: -6px 0 14px;
+  font-size: 0.9rem;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary, #1C6EA4);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}

@@ -1,3 +1,4 @@
+from flask_login import current_user
 import re
 import time
 
@@ -197,3 +198,88 @@ def logout():
     session.pop("last_seen", None)
     flash("You have been signed out.", "success")
     return redirect(url_for("auth.login"))
+
+def get_reset_user():
+    phone = session.get("reset_phone")
+    if not phone:
+        return None
+    return User.query.filter_by(phone=phone).first()
+
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
+    if request.method == "POST":
+        phone = request.form.get("phone", "").strip()
+        if not PHONE_PATTERN.match(phone):
+            flash("Enter a valid 11-digit Bangladeshi phone number.", "danger")
+            return render_template("forgot_password.html")
+
+        session["reset_phone"] = phone
+        user = User.query.filter_by(phone=phone).first()
+        if user and user.role != "admin":
+            send_new_code(user)
+        flash("If an account exists for this number, we sent a 6-digit code.", "success")
+        return redirect(url_for("auth.reset_password"))
+
+    return render_template("forgot_password.html")
+
+
+@auth_bp.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    phone = session.get("reset_phone")
+    if not phone:
+        flash("Please enter your phone number first.", "warning")
+        return redirect(url_for("auth.forgot_password"))
+
+    if request.method == "POST":
+        code = request.form.get("code", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        errors = []
+        if not (code.isdigit() and len(code) == 6):
+            errors.append("Please enter the 6-digit code.")
+        if len(password) < 8:
+            errors.append("Password must be at least 8 characters.")
+        if password != confirm_password:
+            errors.append("Passwords do not match.")
+
+        if errors:
+            for error in errors:
+                flash(error, "danger")
+            return render_template("reset_password.html", phone_end=phone[-3:])
+
+        user = get_reset_user()
+        if user is None or user.role == "admin":
+            flash(OTP_MESSAGES["wrong"], "danger")
+            return render_template("reset_password.html", phone_end=phone[-3:])
+
+        result = verify_otp(user, code)
+        if result != "ok":
+            flash(OTP_MESSAGES[result], "danger")
+            return render_template("reset_password.html", phone_end=phone[-3:])
+
+        user.set_password(password)
+        db.session.commit()
+        session.pop("reset_phone", None)
+        flash("Your password has been changed. Please sign in with your new password.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("reset_password.html", phone_end=phone[-3:])
+
+
+@auth_bp.route("/reset-password/resend", methods=["POST"])
+def resend_reset_code():
+    user = get_reset_user()
+    if user is None or user.role == "admin":
+        flash("If an account exists for this number, we sent a new code.", "success")
+        return redirect(url_for("auth.reset_password"))
+
+    if send_new_code(user):
+        flash("A new code has been sent to your phone.", "success")
+    else:
+        flash("Please wait a minute before asking for a new code.", "warning")
+    return redirect(url_for("auth.reset_password"))
